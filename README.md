@@ -15,7 +15,7 @@ A full-stack cryptocurrency trading and point-of-sale platform built with React,
 - POS terminal with Stripe integration
 - Real on-chain DEX liquidation
 - Portfolio tracking with P&L
-- Payment preferences (priority order)
+- Payment preferences (priority order).
 
 ## Setup
 
