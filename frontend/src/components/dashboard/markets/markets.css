@@ -1,0 +1,206 @@
+.markets-container {
+  padding: 20px;
+  color: white;
+  background: #1E1E1E;
+  border-radius: 16px;
+  border: 1px solid #333;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.markets-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.markets-header h1 {
+  color: #00F0FF;
+  margin: 0;
+  font-size: 2rem;
+}
+
+.market-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.search-bar {
+  display: flex;
+  gap: 10px;
+}
+
+.search-bar input {
+  background: #2D2D2D;
+  border: 1px solid #333;
+  padding: 10px 15px;
+  border-radius: 8px;
+  color: white;
+  font-family: 'Space Grotesk', sans-serif;
+  width: 250px;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #FF9800;
+}
+
+.search-btn {
+  background: #FF9800;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  color: #000;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.search-btn:hover {
+  background: #00F0FF;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+}
+
+.market-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  background: #2D2D2D;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  color: #AAA;
+  cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  background: rgba(255, 152, 0, 0.2);
+  color: #FF9800;
+}
+
+.tab.active {
+  background: #FF9800;
+  color: #000;
+}
+
+.market-table {
+  background: #2D2D2D;
+  border-radius: 12px;
+  overflow: hidden;
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  padding: 15px;
+  background: #1E1E1E;
+  color: #00F0FF;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+td {
+  padding: 15px;
+  border-bottom: 1px solid #333;
+  color: #AAA;
+}
+
+tr:hover td {
+  background: #1E1E1E;
+}
+
+.coin-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.coin-name {
+  color: white;
+  font-weight: 500;
+}
+
+.coin-symbol {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.positive {
+  color: #00F0FF;
+  font-weight: 500;
+}
+
+.negative {
+  color: #FF3B3B;
+  font-weight: 500;
+}
+
+.trade-btn {
+  background: transparent;
+  border: 1px solid #FF9800;
+  color: #FF9800;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.trade-btn:hover {
+  background: #FF9800;
+  color: #000;
+}
+
+.no-results {
+  text-align: center;
+  padding: 50px;
+  color: #888;
+  font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .markets-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .market-controls {
+    flex-direction: column;
+  }
+  
+  .search-bar {
+    flex-direction: column;
+  }
+  
+  .search-bar input {
+    width: 100%;
+  }
+  
+  th, td {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .market-tabs {
+    justify-content: center;
+  }
+}
