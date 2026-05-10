@@ -141,7 +141,7 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8000');
+    const ws = new WebSocket('wss://vpx-backend.onrender.com');
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === 'PRICE_UPDATE') {
@@ -159,7 +159,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/news');
+        const res = await fetch('https://vpx-backend.onrender.com/api/news');
         const data = await res.json();
         if (data.success) setNews(data.data);
       } catch (err) {

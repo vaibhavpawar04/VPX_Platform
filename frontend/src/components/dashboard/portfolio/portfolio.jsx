@@ -53,7 +53,7 @@ const Portfolio = () => {
 
   const fetchHoldings = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/portfolio/holdings', {
+      const res = await fetch('https://vpx-backend.onrender.com/api/portfolio/holdings', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -63,7 +63,7 @@ const Portfolio = () => {
 
   const fetchSummary = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/portfolio/summary', {
+      const res = await fetch('https://vpx-backend.onrender.com/api/portfolio/summary', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -73,7 +73,7 @@ const Portfolio = () => {
 
   const fetchTrades = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/portfolio/trades', {
+      const res = await fetch('https://vpx-backend.onrender.com/api/portfolio/trades', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -83,7 +83,7 @@ const Portfolio = () => {
 
   const fetchWatchlist = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/portfolio/watchlist', {
+      const res = await fetch('https://vpx-backend.onrender.com/api/portfolio/watchlist', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();

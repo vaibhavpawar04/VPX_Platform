@@ -123,7 +123,7 @@ const POS = () => {
 
   const fetchTransactions = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/pos/transactions', {
+      const res = await fetch('https://vpx-backend.onrender.com/api/pos/transactions', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -135,7 +135,7 @@ const POS = () => {
 
   const fetchSummary = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/pos/summary', {
+      const res = await fetch('https://vpx-backend.onrender.com/api/pos/summary', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();

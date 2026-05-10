@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8000/api';
+const BASE_URL = 'https://vpx-backend.onrender.com/api';
 
 const getToken = () => localStorage.getItem('token');
 

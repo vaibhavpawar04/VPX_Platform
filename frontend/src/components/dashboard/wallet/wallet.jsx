@@ -71,7 +71,7 @@ const Wallet = () => {
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/prices');
+        const res = await fetch('https://vpx-backend.onrender.com/api/prices');
         const data = await res.json();
         if (data.success) { setPrices(data.data); setPricesLoaded(true); }
       } catch (err) { console.log('Price fetch error:', err); }
@@ -85,7 +85,7 @@ const Wallet = () => {
   useEffect(() => {
     const fetchPrefs = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/wallet/payment-preferences', {
+        const res = await fetch('https://vpx-backend.onrender.com/api/wallet/payment-preferences', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
@@ -267,7 +267,7 @@ const Wallet = () => {
     try {
       setPrefsLoading(true);
       setPrefsMsg('');
-      const res = await fetch('http://localhost:8000/api/wallet/payment-preferences', {
+      const res = await fetch('https://vpx-backend.onrender.com/api/wallet/payment-preferences', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

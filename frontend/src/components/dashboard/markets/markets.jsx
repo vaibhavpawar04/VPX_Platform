@@ -10,7 +10,7 @@ const Markets = () => {
   useEffect(() => {
     const fetchMarkets = async () => {
       try {
-        const res  = await fetch('http://localhost:8000/api/markets');
+        const res  = await fetch('https://vpx-backend.onrender.com/api/markets');
         const data = await res.json();
         if (data.success) {
           setCoins(data.data);
