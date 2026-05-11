@@ -75,9 +75,13 @@ function Login() {
         <div className="w-1/2 h-full flex items-center justify-center bg-[#0A0C10]">
           <div className="w-full max-w-sm p-6">
 
-            {/* Logo and heading */}
+            {/* VPX Logo and heading */}
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-white">Welcome</h2>
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <img src="/VPX-logo.png" alt="VPX" className="w-10 h-10" />
+                <span className="text-2xl font-bold text-[#00F0FF] tracking-wider">VPX Platform</span>
+              </div>
+              <h2 className="text-xl font-semibold text-white">Welcome back</h2>
               <p className="text-gray-400 text-sm mt-1">Sign in to your account</p>
             </div>
 
