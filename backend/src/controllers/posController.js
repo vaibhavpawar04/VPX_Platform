@@ -41,6 +41,13 @@ const stripeWebhook = async (req, res) => {
     const paymentIntent = event.data.object;
     const startTime = Date.now();
 
+    // ← DUPLICATE CHECK
+    const existing = await Transaction.findOne({ stripePaymentId: paymentIntent.id });
+    if (existing) {
+      console.log('Payment already processed:', paymentIntent.id);
+      return res.json({ received: true });
+    }
+
     try {
       const fiatAmount = paymentIntent.amount / 100;
       const fiatCurrency = paymentIntent.currency.toUpperCase();
@@ -136,7 +143,6 @@ const stripeWebhook = async (req, res) => {
       let orderedCoins;
 
       if (priorityOrder && priorityOrder.length > 0) {
-        // Priority order — drain coins in user's preferred order
         console.log(`Using priority order: ${priorityOrder.join(' → ')}`);
         orderedCoins = [...coinValues].sort((a, b) => {
           const aIndex = priorityOrder.indexOf(a.coin);
@@ -146,7 +152,6 @@ const stripeWebhook = async (req, res) => {
           return aRank - bRank;
         });
       } else {
-        // No preferences — fall back to proportional
         console.log('No preferences set — using proportional split');
         orderedCoins = null;
       }
@@ -155,7 +160,6 @@ const stripeWebhook = async (req, res) => {
       let remainingUSD = usdAmount;
 
       if (orderedCoins) {
-        // PRIORITY ORDER — drain one coin at a time
         for (const coin of orderedCoins) {
           if (remainingUSD <= 0) break;
 
@@ -212,7 +216,6 @@ const stripeWebhook = async (req, res) => {
         }
 
       } else {
-        // PROPORTIONAL SPLIT fallback
         for (const coin of coinValues) {
           const weight = coin.usdValue / totalWalletUSD;
           const deductUSD = usdAmount * weight;
