@@ -11,6 +11,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@crossmint/server-sdk": "^1.2.77",
     "@orca-so/whirlpools": "^7.0.2",
     "@solana/kit": "^5.5.1",
     "@solana/web3.js": "^1.98.4",
@@ -26,6 +27,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.1.0",
     "mongoose": "^9.2.4",
+    "node-forge": "^1.4.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "stripe": "^22.1.0",
