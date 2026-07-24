@@ -11,7 +11,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@crossmint/server-sdk": "^1.2.77",
     "@orca-so/whirlpools": "^7.0.2",
     "@solana/kit": "^5.5.1",
     "@solana/web3.js": "^1.98.4",
