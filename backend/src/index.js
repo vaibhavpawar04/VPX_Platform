@@ -13,7 +13,8 @@ const { connectToBinance, addClient } = require('./services/binanceService');
 const { startNewsService } = require('./services/newsService');
 const { startMarketsService } = require('./services/marketsService');
 const { startMonitoring } = require('./services/alchemyService');
-const { startSolanaMonitoring } = require('./services/solanaService');
+const { startSolanaMonitoring } = require("./services/solanaService");
+const { startBaseMonitoring } = require("./services/baseService");
 
 const priceRoutes   = require('./routes/priceRoutes');
 const newsRoutes    = require('./routes/newsRoutes');
@@ -67,6 +68,7 @@ mongoose.connect(process.env.MONGO_URI)
       startMarketsService();
       startMonitoring();
       startSolanaMonitoring();
+      startBaseMonitoring();
     });
   })
   .catch((err) => {

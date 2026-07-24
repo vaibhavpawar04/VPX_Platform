@@ -1,6 +1,7 @@
 const Balance = require('../models/Balance');
 const Transaction = require('../models/Transaction');
 const PaymentPreference = require('../models/PaymentPreference');
+const { processMerchantPayout } = require('../services/payoutService');
 const https = require('https');
 
 const getStripe = () => require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -41,7 +42,7 @@ const stripeWebhook = async (req, res) => {
     const paymentIntent = event.data.object;
     const startTime = Date.now();
 
-    // ← DUPLICATE CHECK
+    // DUPLICATE CHECK
     const existing = await Transaction.findOne({ stripePaymentId: paymentIntent.id });
     if (existing) {
       console.log('Payment already processed:', paymentIntent.id);
@@ -52,8 +53,10 @@ const stripeWebhook = async (req, res) => {
       const fiatAmount = paymentIntent.amount / 100;
       const fiatCurrency = paymentIntent.currency.toUpperCase();
       const userId = paymentIntent.metadata?.userId;
+      const merchantId = paymentIntent.metadata?.merchantId;
 
       console.log(`POS Payment received: ${fiatAmount} ${fiatCurrency} for user ${userId}`);
+      console.log(`Merchant: ${merchantId || 'not specified'}`);
 
       if (!userId) {
         console.log('No userId in payment metadata — skipping');
@@ -141,7 +144,6 @@ const stripeWebhook = async (req, res) => {
 
       // Sort coins by priority order or proportional
       let orderedCoins;
-
       if (priorityOrder && priorityOrder.length > 0) {
         console.log(`Using priority order: ${priorityOrder.join(' → ')}`);
         orderedCoins = [...coinValues].sort((a, b) => {
@@ -158,6 +160,7 @@ const stripeWebhook = async (req, res) => {
 
       const breakdown = [];
       let remainingUSD = usdAmount;
+      let totalUSDCSwapped = 0;
 
       if (orderedCoins) {
         for (const coin of orderedCoins) {
@@ -176,9 +179,11 @@ const stripeWebhook = async (req, res) => {
               const result = await swapETHToUSDC(userId, parseFloat(useCrypto.toFixed(8)));
               txHash = result.txHash;
               onChain = true;
+              totalUSDCSwapped += useUSD;
               console.log(`✓ ETH swap txHash: ${txHash}`);
             } catch (err) {
               console.log(`ETH swap failed, MongoDB only: ${err.message}`);
+              totalUSDCSwapped += useUSD;
             }
           } else if (coin.coin === 'SOL') {
             try {
@@ -187,10 +192,28 @@ const stripeWebhook = async (req, res) => {
               const result = await swapSOLToUSDC(userId, parseFloat(useCrypto.toFixed(8)));
               txHash = result.txHash;
               onChain = true;
+              totalUSDCSwapped += useUSD;
               console.log(`✓ SOL swap txHash: ${txHash}`);
             } catch (err) {
               console.log(`SOL swap failed, MongoDB only: ${err.message}`);
+              totalUSDCSwapped += useUSD;
             }
+          } else if (coin.coin === 'BASE') {
+            try {
+              console.log(`Swapping ${useCrypto.toFixed(8)} BASE ETH → USDC on Base Sepolia...`);
+              const { swapBaseETHToUSDC } = require('../services/baseService');
+              const result = await swapBaseETHToUSDC(userId, parseFloat(useCrypto.toFixed(8)));
+              txHash = result.txHash;
+              onChain = true;
+              totalUSDCSwapped += useUSD;
+              console.log(`✓ BASE swap txHash: ${txHash}`);
+            } catch (err) {
+              console.log(`BASE swap failed, MongoDB only: ${err.message}`);
+              totalUSDCSwapped += useUSD;
+            }
+          } else {
+            // BTC, BNB, XRP etc — MongoDB only, count as USDC equivalent
+            totalUSDCSwapped += useUSD;
           }
 
           breakdown.push({
@@ -230,8 +253,10 @@ const stripeWebhook = async (req, res) => {
               const result = await swapETHToUSDC(userId, parseFloat(deductCrypto.toFixed(8)));
               txHash = result.txHash;
               onChain = true;
+              totalUSDCSwapped += deductUSD;
             } catch (err) {
               console.log(`ETH swap failed: ${err.message}`);
+              totalUSDCSwapped += deductUSD;
             }
           } else if (coin.coin === 'SOL') {
             try {
@@ -239,9 +264,24 @@ const stripeWebhook = async (req, res) => {
               const result = await swapSOLToUSDC(userId, parseFloat(deductCrypto.toFixed(8)));
               txHash = result.txHash;
               onChain = true;
+              totalUSDCSwapped += deductUSD;
             } catch (err) {
               console.log(`SOL swap failed: ${err.message}`);
+              totalUSDCSwapped += deductUSD;
             }
+          } else if (coin.coin === 'BASE') {
+            try {
+              const { swapBaseETHToUSDC } = require('../services/baseService');
+              const result = await swapBaseETHToUSDC(userId, parseFloat(deductCrypto.toFixed(8)));
+              txHash = result.txHash;
+              onChain = true;
+              totalUSDCSwapped += deductUSD;
+            } catch (err) {
+              console.log(`BASE swap failed: ${err.message}`);
+              totalUSDCSwapped += deductUSD;
+            }
+          } else {
+            totalUSDCSwapped += deductUSD;
           }
 
           breakdown.push({
@@ -268,6 +308,23 @@ const stripeWebhook = async (req, res) => {
 
       const processingTimeMs = Date.now() - startTime;
 
+      // ── MERCHANT PAYOUT FROM TREASURY ──
+      let merchantPayout = null;
+      if (merchantId) {
+        try {
+          console.log(`\n── Initiating merchant payout ──`);
+          console.log(`USDC in treasury: $${totalUSDCSwapped.toFixed(2)}`);
+          merchantPayout = await processMerchantPayout(
+            merchantId,
+            totalUSDCSwapped,
+            breakdown[0]?.txHash || null
+          );
+          console.log(`✓ Merchant payout complete!`);
+        } catch (err) {
+          console.log(`Merchant payout failed: ${err.message}`);
+        }
+      }
+
       await Transaction.create({
         userId, type: 'pos_payment', fiatAmount, fiatCurrency,
         usdAmount, stripePaymentId: paymentIntent.id,
@@ -275,14 +332,24 @@ const stripeWebhook = async (req, res) => {
         note: priorityOrder
           ? `POS payment via Stripe — priority order`
           : `POS payment via Stripe — proportional split`,
+        merchantPayout: merchantPayout || null,
       });
 
-      console.log(`✓ POS Payment confirmed in ${processingTimeMs}ms`);
+      console.log(`\n✓ POS Payment confirmed in ${processingTimeMs}ms`);
       console.log('Breakdown:');
       breakdown.forEach(b => {
         console.log(`  ${b.coin}: ${b.cryptoAmount.toFixed(8)} ($${b.usdValue.toFixed(2)}) ${b.onChain ? '✓ on-chain' : '⚠ MongoDB only'}`);
         if (b.explorer) console.log(`  Explorer: ${b.explorer}`);
       });
+
+      if (merchantPayout) {
+        console.log(`\n── Merchant Payout Summary ──`);
+        console.log(`  Business: ${merchantPayout.businessName}`);
+        console.log(`  IBAN: ${merchantPayout.iban}`);
+        console.log(`  Amount: ${merchantPayout.fiatAmount} ${merchantPayout.currency}`);
+        console.log(`  Method: ${merchantPayout.payoutMethod}`);
+        console.log(`  Rate: 1 USDC = ${merchantPayout.exchangeRate} ${merchantPayout.currency}`);
+      }
 
     } catch (err) {
       console.log('POS processing error:', err.message);

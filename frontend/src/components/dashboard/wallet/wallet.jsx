@@ -10,17 +10,17 @@ import {
 } from "../../../api";
 
 const COIN_ICONS = {
-  BTC: '₿', ETH: 'Ξ', SOL: '◎', BNB: 'B',
+  BTC: '₿', ETH: 'Ξ', SOL: '◎', BASE: 'Ξ', BNB: 'B',
   USDT: '₮', XRP: 'X', ADA: 'A', DOGE: 'D',
 };
 
 const COIN_NAMES = {
-  BTC: 'Bitcoin', ETH: 'Ethereum', SOL: 'Solana',
+  BTC: 'Bitcoin', ETH: 'Ethereum', SOL: 'Solana', BASE: 'Base',
   BNB: 'BNB', USDT: 'Tether', XRP: 'XRP',
   ADA: 'Cardano', DOGE: 'Dogecoin',
 };
 
-const SUPPORTED_COINS = ['BTC', 'ETH', 'SOL', 'BNB', 'USDT', 'XRP', 'ADA', 'DOGE'];
+const SUPPORTED_COINS = ['BTC', 'ETH', 'SOL', 'BASE', 'BNB', 'USDT', 'XRP', 'ADA', 'DOGE'];
 
 const Wallet = () => {
   const [balances, setBalances] = useState([]);
@@ -628,7 +628,7 @@ const Wallet = () => {
             >
               {SUPPORTED_COINS.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
-            {(depositCoin === 'ETH' || depositCoin === 'SOL') ? (
+            {(depositCoin === 'ETH' || depositCoin === 'SOL' || depositCoin === 'BASE') ? (
               <div>
                 {metaMaskConnected && (
                   <div style={{ marginBottom: '12px' }}>
@@ -688,7 +688,9 @@ const Wallet = () => {
                     <div style={{ background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.2)', borderRadius: '10px', padding: '12px', marginBottom: '12px' }}>
                       <div style={{ color: '#FF9800', fontSize: '0.8rem', fontWeight: '600', marginBottom: '4px' }}>⚠️ Important</div>
                       <div style={{ color: '#888', fontSize: '0.78rem', lineHeight: '1.5' }}>
-                        {depositCoin === 'ETH'
+                        {depositCoin === 'BASE'
+                          ? 'Only send ETH on Base Sepolia Testnet to this address.'
+                          : depositCoin === 'ETH'
                           ? 'Only send ETH on Sepolia Testnet to this address.'
                           : 'Only send SOL on Solana Devnet to this address.'
                         }

@@ -18,7 +18,7 @@ const transactionSchema = new mongoose.Schema({
   coin:       { type: String, uppercase: true },
   amount:     { type: Number },
   usdValue:   { type: Number, default: 0 },
-  priceAtDeposit: { type: Number, default: 0 }, // ← new
+  priceAtDeposit: { type: Number, default: 0 },
   status: {
     type:    String,
     enum:    ['pending', 'confirmed', 'failed', 'declined'],
@@ -28,7 +28,6 @@ const transactionSchema = new mongoose.Schema({
   fromAddress: { type: String },
   toAddress:   { type: String },
   note:        { type: String },
-
   // POS specific fields
   fiatAmount:       { type: Number },
   fiatCurrency:     { type: String },
@@ -36,7 +35,22 @@ const transactionSchema = new mongoose.Schema({
   stripePaymentId:  { type: String },
   breakdown:        { type: Array, default: [] },
   processingTimeMs: { type: Number },
-
+  // Merchant payout
+  merchantPayout: {
+    merchantId:   { type: String },
+    businessName: { type: String },
+    iban:         { type: String },
+    usdcAmount:   { type: Number },
+    fiatAmount:   { type: Number },
+    currency:     { type: String },
+    country:      { type: String },
+    exchangeRate: { type: Number },
+    payoutMethod: { type: String },
+    status:       { type: String },
+    processingMs: { type: Number },
+    txHash:       { type: String },
+    simulatedAt:  { type: String },
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

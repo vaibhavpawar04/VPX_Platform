@@ -1,9 +1,46 @@
 const User = require('../models/User');
+const Balance = require('../models/Balance');
 const jwt  = require('jsonwebtoken');
+
+const SUPPORTED_COINS = ['BTC', 'ETH', 'SOL', 'BASE', 'BNB', 'USDT', 'XRP', 'ADA', 'DOGE'];
 
 // Generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1y' });
+};
+
+// Auto-generate wallets and balances for new user
+const setupNewUser = async (userId) => {
+  try {
+    // Generate BASE deposit address
+    const { generateBaseDepositAddress } = require('../services/baseService');
+    const baseAddress = await generateBaseDepositAddress(userId);
+    console.log(`✓ BASE wallet generated for user ${userId}: ${baseAddress}`);
+
+    // Generate ETH deposit address
+    const { generateDepositAddress, monitorAddress } = require('../services/alchemyService');
+    const ethAddress = await generateDepositAddress(userId);
+    monitorAddress(ethAddress.toLowerCase(), userId);
+    console.log(`✓ ETH wallet generated for user ${userId}: ${ethAddress}`);
+
+    // Generate SOL deposit address
+    const { generateSolanaDepositAddress, monitorSolanaAddress } = require('../services/solanaService');
+    const solAddress = await generateSolanaDepositAddress(userId);
+    monitorSolanaAddress(solAddress, userId);
+    console.log(`✓ SOL wallet generated for user ${userId}: ${solAddress}`);
+
+    // Create zero balances for all supported coins
+    for (const coin of SUPPORTED_COINS) {
+      const existing = await Balance.findOne({ userId, coin });
+      if (!existing) {
+        await Balance.create({ userId, coin, amount: 0, lockedAmount: 0 });
+      }
+    }
+    console.log(`✓ Balances initialized for user ${userId}`);
+
+  } catch (err) {
+    console.log('Setup new user error:', err.message);
+  }
 };
 
 // REGISTER
@@ -11,23 +48,21 @@ const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Check if all fields are provided
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
-    // Create new user
     const user = await User.create({ name, email, password });
 
-    // Generate token
-    const token = generateToken(user._id);
+    // Auto-generate wallets for new user
+    await setupNewUser(user._id);
 
+    const token = generateToken(user._id);
     res.status(201).json({
       success: true,
       message: 'Account created successfully',
@@ -40,7 +75,6 @@ const register = async (req, res) => {
         kycStatus:   user.kycStatus,
       }
     });
-
   } catch (err) {
     console.log('Register error:', err.message);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -52,26 +86,24 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check if all fields are provided
     if (!email || !password) {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
 
-    // Find user
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    // Generate token
-    const token = generateToken(user._id);
+    // Setup wallets if not already done
+    await setupNewUser(user._id);
 
+    const token = generateToken(user._id);
     res.json({
       success: true,
       message: 'Login successful',
@@ -84,7 +116,6 @@ const login = async (req, res) => {
         kycStatus:   user.kycStatus,
       }
     });
-
   } catch (err) {
     console.log('Login error:', err.message);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -105,4 +136,4 @@ const getMe = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getMe };
+module.exports = { register, login, getMe, setupNewUser };
