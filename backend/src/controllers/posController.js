@@ -198,6 +198,19 @@ const stripeWebhook = async (req, res) => {
               console.log(`SOL swap failed, MongoDB only: ${err.message}`);
               totalUSDCSwapped += useUSD;
             }
+          } else if (coin.coin === 'ARB') {
+            try {
+              console.log(`Swapping ${useCrypto.toFixed(8)} ARB ETH → USDC on Arbitrum Sepolia...`);
+              const { swapArbitrumETHToUSDC } = require('../services/arbitrumService');
+              const result = await swapArbitrumETHToUSDC(userId, parseFloat(useCrypto.toFixed(8)));
+              txHash = result.txHash;
+              onChain = true;
+              totalUSDCSwapped += useUSD;
+              console.log(`✓ ARB swap txHash: ${txHash}`);
+            } catch (err) {
+              console.log(`ARB swap failed, MongoDB only: ${err.message}`);
+              totalUSDCSwapped += useUSD;
+            }
           } else if (coin.coin === 'BASE') {
             try {
               console.log(`Swapping ${useCrypto.toFixed(8)} BASE ETH → USDC on Base Sepolia...`);
@@ -268,6 +281,19 @@ const stripeWebhook = async (req, res) => {
             } catch (err) {
               console.log(`SOL swap failed: ${err.message}`);
               totalUSDCSwapped += deductUSD;
+            }
+          } else if (coin.coin === 'ARB') {
+            try {
+              console.log(`Swapping ${useCrypto.toFixed(8)} ARB ETH → USDC on Arbitrum Sepolia...`);
+              const { swapArbitrumETHToUSDC } = require('../services/arbitrumService');
+              const result = await swapArbitrumETHToUSDC(userId, parseFloat(useCrypto.toFixed(8)));
+              txHash = result.txHash;
+              onChain = true;
+              totalUSDCSwapped += useUSD;
+              console.log(`✓ ARB swap txHash: ${txHash}`);
+            } catch (err) {
+              console.log(`ARB swap failed, MongoDB only: ${err.message}`);
+              totalUSDCSwapped += useUSD;
             }
           } else if (coin.coin === 'BASE') {
             try {

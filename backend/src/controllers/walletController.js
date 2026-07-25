@@ -2,7 +2,7 @@ const Balance = require('../models/Balance');
 const Transaction = require('../models/Transaction');
 const Wallet = require('../models/Wallet');
 
-const SUPPORTED_COINS = ['BTC', 'ETH', 'SOL', 'BASE', 'BNB', 'USDT', 'XRP', 'ADA', 'DOGE'];
+const SUPPORTED_COINS = ['BTC', 'ETH', 'SOL', 'BASE', 'ARB', 'BNB', 'USDT', 'XRP', 'ADA', 'DOGE'];
 
 // CONNECT WALLET
 const connectWallet = async (req, res) => {

@@ -10,17 +10,17 @@ import {
 } from "../../../api";
 
 const COIN_ICONS = {
-  BTC: '₿', ETH: 'Ξ', SOL: '◎', BASE: 'Ξ', BNB: 'B',
+  BTC: '₿', ETH: 'Ξ', SOL: '◎', BASE: 'Ξ', ARB: 'A', BNB: 'B',
   USDT: '₮', XRP: 'X', ADA: 'A', DOGE: 'D',
 };
 
 const COIN_NAMES = {
-  BTC: 'Bitcoin', ETH: 'Ethereum', SOL: 'Solana', BASE: 'Base',
+  BTC: 'Bitcoin', ETH: 'Ethereum', SOL: 'Solana', BASE: 'Base', ARB: 'Arbitrum',
   BNB: 'BNB', USDT: 'Tether', XRP: 'XRP',
   ADA: 'Cardano', DOGE: 'Dogecoin',
 };
 
-const SUPPORTED_COINS = ['BTC', 'ETH', 'SOL', 'BASE', 'BNB', 'USDT', 'XRP', 'ADA', 'DOGE'];
+const SUPPORTED_COINS = ['BTC', 'ETH', 'SOL', 'BASE', 'ARB', 'BNB', 'USDT', 'XRP', 'ADA', 'DOGE'];
 
 const Wallet = () => {
   const [balances, setBalances] = useState([]);
@@ -628,7 +628,7 @@ const Wallet = () => {
             >
               {SUPPORTED_COINS.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
-            {(depositCoin === 'ETH' || depositCoin === 'SOL' || depositCoin === 'BASE') ? (
+            {(depositCoin === 'ETH' || depositCoin === 'SOL' || depositCoin === 'BASE' || depositCoin === 'ARB') ? (
               <div>
                 {metaMaskConnected && (
                   <div style={{ marginBottom: '12px' }}>

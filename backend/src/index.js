@@ -15,6 +15,7 @@ const { startMarketsService } = require('./services/marketsService');
 const { startMonitoring } = require('./services/alchemyService');
 const { startSolanaMonitoring } = require("./services/solanaService");
 const { startBaseMonitoring } = require("./services/baseService");
+const { startArbitrumMonitoring } = require("./services/arbitrumService");
 
 const priceRoutes   = require('./routes/priceRoutes');
 const newsRoutes    = require('./routes/newsRoutes');
@@ -69,6 +70,7 @@ mongoose.connect(process.env.MONGO_URI)
       startMonitoring();
       startSolanaMonitoring();
       startBaseMonitoring();
+      startArbitrumMonitoring();
     });
   })
   .catch((err) => {

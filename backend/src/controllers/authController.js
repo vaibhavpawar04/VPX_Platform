@@ -2,7 +2,7 @@ const User = require('../models/User');
 const Balance = require('../models/Balance');
 const jwt  = require('jsonwebtoken');
 
-const SUPPORTED_COINS = ['BTC', 'ETH', 'SOL', 'BASE', 'BNB', 'USDT', 'XRP', 'ADA', 'DOGE'];
+const SUPPORTED_COINS = ['BTC', 'ETH', 'SOL', 'BASE', 'ARB', 'BNB', 'USDT', 'XRP', 'ADA', 'DOGE'];
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -12,6 +12,11 @@ const generateToken = (userId) => {
 // Auto-generate wallets and balances for new user
 const setupNewUser = async (userId) => {
   try {
+    // Generate ARB deposit address
+    const { generateArbitrumDepositAddress } = require('../services/arbitrumService');
+    const arbAddress = await generateArbitrumDepositAddress(userId);
+    console.log(`✓ ARB wallet generated for user ${userId}: ${arbAddress}`);
+
     // Generate BASE deposit address
     const { generateBaseDepositAddress } = require('../services/baseService');
     const baseAddress = await generateBaseDepositAddress(userId);

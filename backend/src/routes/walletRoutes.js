@@ -40,6 +40,10 @@ router.get('/deposit-address/:coin', async (req, res) => {
       const address = await generateDepositAddress(userId);
       monitorAddress(address.toLowerCase(), userId);
       res.json({ success: true, address, network: 'Sepolia Testnet', coin: 'ETH' });
+    } else if (coin.toUpperCase() === 'ARB') {
+      const { generateArbitrumDepositAddress } = require('../services/arbitrumService');
+      const address = await generateArbitrumDepositAddress(userId);
+      res.json({ success: true, address, network: 'Arbitrum Sepolia Testnet', coin: 'ARB' });
     } else if (coin.toUpperCase() === 'BASE') {
       const { generateBaseDepositAddress, monitorBaseAddress } = require('../services/baseService');
       const address = await generateBaseDepositAddress(userId);
