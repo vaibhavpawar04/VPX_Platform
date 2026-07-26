@@ -17,7 +17,7 @@ const HomePage = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveStep(prev => (prev + 1) % 4);
-    }, 2000);
+    }, 500);
     return () => clearInterval(interval);
   }, []);
 
@@ -208,7 +208,7 @@ const HomePage = () => {
                   <div style={{ fontSize: '0.75rem', color: '#6B7280', marginBottom: '4px' }}>Processing Payment</div>
                   <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#F9FAFB' }}>$10.00</div>
                 </div>
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '8px', padding: '6px 12px', fontSize: '0.78rem', color: '#10B981', fontWeight: '600' }}>✓ Confirmed</div>
+                <div style={{ background: activeStep === 3 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${activeStep === 3 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255,255,255,0.06)'}`, borderRadius: '8px', padding: '6px 12px', fontSize: '0.78rem', color: activeStep === 3 ? '#10B981' : '#4B5563', fontWeight: '600', transition: 'all 0.4s' }}>{activeStep === 3 ? '✓ Confirmed' : 'Processing...'}</div>
               </div>
               {steps.map((step, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: i < steps.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
