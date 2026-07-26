@@ -274,7 +274,7 @@ const HomePage = () => {
           <div style={{ marginTop: '48px', display: 'flex', justifyContent: 'center' }}>
             <div style={{ background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '100px', padding: '10px 24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '1.1rem', fontWeight: '800', color: '#10B981' }}>{'<'}2s</span>
-              <span style={{ color: '#6B7280', fontSize: '0.875rem' }}>total processing time — faster than Visa's 1–3 second average</span>
+              <span style={{ color: '#6B7280', fontSize: '0.875rem' }}>total processing time — faster than traditional card networks</span>
             </div>
           </div>
         </div>
