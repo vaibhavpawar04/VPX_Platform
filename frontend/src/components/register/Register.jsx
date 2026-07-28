@@ -83,7 +83,7 @@ function Register() {
                 <label className="block text-xs font-medium text-gray-300 mb-1">Full Name</label>
                 <input
                   type="text"
-                  placeholder="Vaibhav Pawar"
+                  placeholder="John Doe"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   className="w-full px-3 py-2 text-sm rounded-lg bg-[#1E1F25] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:border-transparent"
