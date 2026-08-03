@@ -225,7 +225,8 @@ const getWatchlist = async (req, res) => {
     const { getMarkets } = require("../services/marketsService");
     const markets = getMarkets();
     const user = await User.findById(userId);
-    const userWatchlist = user?.watchlist || [];
+    let userWatchlist = user?.watchlist || [];
+    if (userWatchlist.length === 0) userWatchlist = ['BTC', 'ETH', 'SOL'];
 
     const watchlistCoins = userWatchlist.map(symbol => {
       const market = markets.find(m => m.symbol === symbol);

@@ -49,6 +49,9 @@ const Portfolio = () => {
   });
   const [trades, setTrades]     = useState([]);
   const [watchlist, setWatchlist] = useState([]);
+  const [availableCoins, setAvailableCoins] = useState([]);
+  const [showAddCoin, setShowAddCoin] = useState(false);
+  const [coinSearch, setCoinSearch] = useState('');
   const [loading, setLoading]   = useState(true);
 
   const token = localStorage.getItem('token');
@@ -119,6 +122,32 @@ const Portfolio = () => {
       });
     } catch (err) {
       console.log("Remove watchlist error:", err);
+    }
+  };
+
+  const addToWatchlist = async (symbol) => {
+    setShowAddCoin(false);
+    setCoinSearch("");
+    try {
+      const res = await fetch("https://vpx-backend.onrender.com/api/portfolio/watchlist/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ symbol }),
+      });
+      const data = await res.json();
+      if (data.success) fetchWatchlist();
+    } catch (err) {
+      console.log("Add watchlist error:", err);
+    }
+  };
+
+  const fetchAvailableCoins = async () => {
+    try {
+      const res = await fetch("https://vpx-backend.onrender.com/api/markets");
+      const data = await res.json();
+      if (data.success) setAvailableCoins(data.data);
+    } catch (err) {
+      console.log("Markets fetch error:", err);
     }
   };
 
@@ -300,8 +329,45 @@ const Portfolio = () => {
         <div className="portfolio-watchlist">
           <div className="section-header">
             <h3>Watchlist</h3>
-            <span>{watchlist.length} coins</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span>{watchlist.length} coins</span>
+              <button
+                onClick={() => { setShowAddCoin(prev => !prev); if (!showAddCoin) fetchAvailableCoins(); }}
+                style={{ background: "rgba(0,240,255,0.1)", border: "1px solid rgba(0,240,255,0.3)", color: "#00F0FF", borderRadius: "6px", padding: "4px 10px", fontSize: "0.8rem", cursor: "pointer" }}
+              >
+                + Add
+              </button>
+            </div>
           </div>
+          {showAddCoin && (
+            <div style={{ background: "#1A1D24", border: "1px solid #333", borderRadius: "8px", padding: "10px", marginBottom: "12px" }}>
+              <input
+                type="text"
+                placeholder="Search coins..."
+                value={coinSearch}
+                onChange={e => setCoinSearch(e.target.value)}
+                style={{ width: "100%", padding: "8px", background: "#0A0C10", border: "1px solid #333", borderRadius: "6px", color: "white", marginBottom: "8px", boxSizing: "border-box" }}
+              />
+              <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+                {availableCoins
+                  .filter(c => !watchlist.some(w => w.symbol === c.symbol))
+                  .filter(c => c.symbol.toLowerCase().includes(coinSearch.toLowerCase()) || c.name.toLowerCase().includes(coinSearch.toLowerCase()))
+                  .slice(0, 15)
+                  .map(c => (
+                    <div
+                      key={c.symbol}
+                      onClick={() => addToWatchlist(c.symbol)}
+                      style={{ display: "flex", justifyContent: "space-between", padding: "8px", cursor: "pointer", borderRadius: "6px" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#252932"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      <span>{c.name} ({c.symbol})</span>
+                      <span style={{ color: "#888" }}>${c.price?.toLocaleString()}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
           <div className="watchlist-list">
             {loading ? (
               <div style={{ color: '#888', padding: '20px', textAlign: 'center' }}>Loading...</div>
