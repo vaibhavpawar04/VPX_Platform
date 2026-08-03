@@ -1,5 +1,6 @@
 const Balance = require('../models/Balance');
 const Transaction = require('../models/Transaction');
+const User = require('../models/User');
 
 const COIN_NAMES = {
   BTC: 'Bitcoin', ETH: 'Ethereum', SOL: 'Solana',
@@ -220,27 +221,68 @@ const getTrades = async (req, res) => {
 // GET /api/portfolio/watchlist
 const getWatchlist = async (req, res) => {
   try {
-    const { getMarkets } = require('../services/marketsService');
+    const userId = req.userId;
+    const { getMarkets } = require("../services/marketsService");
     const markets = getMarkets();
+    const user = await User.findById(userId);
+    const userWatchlist = user?.watchlist || [];
 
-    const watchlistCoins = WATCHLIST_COINS.map(symbol => {
+    const watchlistCoins = userWatchlist.map(symbol => {
       const market = markets.find(m => m.symbol === symbol);
       return {
         name:     market?.name || symbol,
         symbol,
-        icon:     COIN_ICONS[symbol] || '🪙',
+        icon:     COIN_ICONS[symbol] || "\ud83e\ude99",
         price:    market?.price || 0,
         change24h: market?.change24h || 0,
         positive: (market?.change24h || 0) >= 0,
       };
-    }).filter(w => w.price > 0);
+    });
 
     res.json({ success: true, data: watchlistCoins });
 
   } catch (err) {
-    console.log('Get watchlist error:', err.message);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.log("Get watchlist error:", err.message);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-module.exports = { getHoldings, getSummary, getTrades, getWatchlist };
+const addToWatchlist = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { symbol } = req.body;
+    if (!symbol) {
+      return res.status(400).json({ success: false, message: "Symbol is required" });
+    }
+    const upperSymbol = symbol.toUpperCase();
+    const user = await User.findById(userId);
+    if (!user.watchlist.includes(upperSymbol)) {
+      user.watchlist.push(upperSymbol);
+      await user.save();
+    }
+    res.json({ success: true, data: user.watchlist });
+  } catch (err) {
+    console.log("Add watchlist error:", err.message);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const removeFromWatchlist = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { symbol } = req.body;
+    if (!symbol) {
+      return res.status(400).json({ success: false, message: "Symbol is required" });
+    }
+    const upperSymbol = symbol.toUpperCase();
+    const user = await User.findById(userId);
+    user.watchlist = user.watchlist.filter(s => s !== upperSymbol);
+    await user.save();
+    res.json({ success: true, data: user.watchlist });
+  } catch (err) {
+    console.log("Remove watchlist error:", err.message);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+module.exports = { getHoldings, getSummary, getTrades, getWatchlist, addToWatchlist, removeFromWatchlist };

@@ -37,6 +37,10 @@ const userSchema = new mongoose.Schema({
     type:    Boolean,
     default: true,
   },
+  watchlist: {
+    type: [String],
+    default: ['ADA', 'XRP', 'DOGE', 'AVAX', 'DOT', 'MATIC'],
+  },
   createdAt: {
     type:    Date,
     default: Date.now,

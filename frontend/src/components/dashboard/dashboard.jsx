@@ -16,13 +16,9 @@ import './dashboard.css';
 const Dashboard = () => {
   const location = useLocation();
 
-  const [prices, setPrices] = useState({
-    BTC: { price: null, dir: null },
-    ETH: { price: null, dir: null },
-    SOL: { price: null, dir: null },
-  });
-
   const [news, setNews] = useState([]);
+  const [watchlist, setWatchlist] = useState([]);
+  const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [walletAddress, setWalletAddress] = useState(() => localStorage.getItem('walletAddress') || '');
@@ -140,21 +136,6 @@ const Dashboard = () => {
     setWalletName('');
   };
 
-  useEffect(() => {
-    const ws = new WebSocket('wss://vpx-backend.onrender.com');
-    ws.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-      if (msg.type === 'PRICE_UPDATE') {
-        setPrices({
-          BTC: msg.data.BTC,
-          ETH: msg.data.ETH,
-          SOL: msg.data.SOL,
-        });
-      }
-    };
-    ws.onerror = (err) => console.log('WebSocket error:', err);
-    return () => ws.close();
-  }, []);
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -170,6 +151,23 @@ const Dashboard = () => {
     const interval = setInterval(fetchNews, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const fetchWatchlist = async () => {
+      try {
+        const res = await fetch("https://vpx-backend.onrender.com/api/portfolio/watchlist", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) setWatchlist(data.data);
+      } catch (err) {
+        console.log("Watchlist fetch error:", err);
+      }
+    };
+    fetchWatchlist();
+    const interval = setInterval(fetchWatchlist, 30 * 1000);
+    return () => clearInterval(interval);
+  }, [token]);
 
   const formatPrice = (symbol, price) => {
     if (price === null) return '---';
@@ -245,28 +243,20 @@ const Dashboard = () => {
 
       <div className="right-sidebar">
         <div className="prices-section">
-          <h3>Current Prices</h3>
-          <div className="price-item">
-            <span>BTC</span>
-            <span>{formatPrice('BTC', prices.BTC.price)}</span>
-            <span style={{ color: prices.BTC.dir === 'up' ? '#00F0FF' : prices.BTC.dir === 'down' ? '#FF3B3B' : '#888' }}>
-              {prices.BTC.dir === 'up' ? '▲' : prices.BTC.dir === 'down' ? '▼' : '-'}
-            </span>
-          </div>
-          <div className="price-item">
-            <span>ETH</span>
-            <span>{formatPrice('ETH', prices.ETH.price)}</span>
-            <span style={{ color: prices.ETH.dir === 'up' ? '#00F0FF' : prices.ETH.dir === 'down' ? '#FF3B3B' : '#888' }}>
-              {prices.ETH.dir === 'up' ? '▲' : prices.ETH.dir === 'down' ? '▼' : '-'}
-            </span>
-          </div>
-          <div className="price-item">
-            <span>SOL</span>
-            <span>{formatPrice('SOL', prices.SOL.price)}</span>
-            <span style={{ color: prices.SOL.dir === 'up' ? '#00F0FF' : prices.SOL.dir === 'down' ? '#FF3B3B' : '#888' }}>
-              {prices.SOL.dir === 'up' ? '▲' : prices.SOL.dir === 'down' ? '▼' : '-'}
-            </span>
-          </div>
+          <h3>Watchlist</h3>
+          {watchlist.length === 0 ? (
+            <div className="price-item"><span>Loading...</span></div>
+          ) : (
+            watchlist.map((coin) => (
+              <div className="price-item" key={coin.symbol}>
+                <span>{coin.symbol}</span>
+                <span>{formatPrice(coin.symbol, coin.price)}</span>
+                <span style={{ color: coin.positive ? "#10B981" : "#FF3B3B" }}>
+                  {coin.positive ? "\u25b2" : "\u25bc"}
+                </span>
+              </div>
+            ))
+          )}
         </div>
         <div className="news-section">
           <h3>Latest News</h3>

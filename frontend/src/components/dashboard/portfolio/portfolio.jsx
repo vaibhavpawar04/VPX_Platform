@@ -109,8 +109,17 @@ const Portfolio = () => {
     return tx.type === tradeFilter.toUpperCase();
   });
 
-  const removeFromWatchlist = (symbol) => {
+  const removeFromWatchlist = async (symbol) => {
     setWatchlist(prev => prev.filter(w => w.symbol !== symbol));
+    try {
+      await fetch("https://vpx-backend.onrender.com/api/portfolio/watchlist/remove", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ symbol }),
+      });
+    } catch (err) {
+      console.log("Remove watchlist error:", err);
+    }
   };
 
   return (
