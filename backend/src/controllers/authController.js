@@ -1,8 +1,6 @@
 const User = require('../models/User');
 const Balance = require('../models/Balance');
 const jwt  = require('jsonwebtoken');
-const crypto = require('crypto');
-const { sendVerificationEmail } = require('../services/emailService');
 
 const SUPPORTED_COINS = ['BTC', 'ETH', 'SOL', 'BASE', 'ARB', 'BNB', 'USDT', 'XRP', 'ADA', 'DOGE'];
 
@@ -56,27 +54,14 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-    const user = await User.create({
-      name,
-      email,
-      password,
-      verificationToken,
-      verificationTokenExpires,
-      isVerified: false,
-    });
+    const user = await User.create({ name, email, password });
 
     await setupNewUser(user._id);
-
-    const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
-    await sendVerificationEmail(user.email, user.name, verificationLink);
 
     const token = generateToken(user._id);
     res.status(201).json({
       success: true,
-      message: 'Account created successfully. Please check your email to verify your account.',
+      message: 'Account created successfully',
       token,
       user: {
         id:          user._id,
@@ -84,7 +69,6 @@ const register = async (req, res) => {
         email:       user.email,
         accountType: user.accountType,
         kycStatus:   user.kycStatus,
-        isVerified:  user.isVerified,
       }
     });
   } catch (err) {
@@ -124,40 +108,10 @@ const login = async (req, res) => {
         email:       user.email,
         accountType: user.accountType,
         kycStatus:   user.kycStatus,
-        isVerified:  user.isVerified,
       }
     });
   } catch (err) {
     console.log('Login error:', err.message);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
-
-const verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.query;
-
-    if (!token) {
-      return res.status(400).json({ success: false, message: 'Verification token is required' });
-    }
-
-    const user = await User.findOne({
-      verificationToken: token,
-      verificationTokenExpires: { $gt: new Date() },
-    });
-
-    if (!user) {
-      return res.status(400).json({ success: false, message: 'Invalid or expired verification link' });
-    }
-
-    user.isVerified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpires = undefined;
-    await user.save();
-
-    res.json({ success: true, message: 'Email verified successfully' });
-  } catch (err) {
-    console.log('Verify email error:', err.message);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -175,4 +129,4 @@ const getMe = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getMe, setupNewUser, verifyEmail };
+module.exports = { register, login, getMe, setupNewUser };

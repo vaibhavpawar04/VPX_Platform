@@ -7,6 +7,7 @@ function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -14,13 +15,18 @@ function Register() {
     e.preventDefault();
     setError("");
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !confirmPassword) {
       setError("Please fill in all fields.");
       return;
     }
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
 
@@ -49,18 +55,18 @@ function Register() {
   };
 
   return (
-    <div className="flex h-screen bg-[#0A0C10] p-6">
-      <div className="flex w-full h-full rounded-2xl overflow-hidden border border-gray-700 shadow-[0_0_0px_rgba(77,126,255,0)] hover:shadow-[0_0_30px_rgba(77,126,255,0.5)] transition-all duration-500 ease-in-out max-w-6xl mx-auto">
+    <div className="flex h-screen bg-[#0A0C10] p-4 md:p-6">
+      <div className="flex flex-col md:flex-row w-full h-full rounded-2xl overflow-hidden border border-gray-700 shadow-[0_0_0px_rgba(77,126,255,0)] hover:shadow-[0_0_30px_rgba(77,126,255,0.5)] transition-all duration-500 ease-in-out max-w-6xl mx-auto">
 
-        {/* Left side - Video */}
-        <div className="w-1/2 h-full">
+        {/* Left side - Video (hidden on mobile) */}
+        <div className="hidden md:block md:w-1/2 h-full">
           <video autoPlay loop muted playsInline className="w-full h-full object-cover">
             <source src="/login-bg.mp4" type="video/mp4" />
           </video>
         </div>
 
         {/* Right side - Form */}
-        <div className="w-1/2 h-full flex items-center justify-center bg-[#0A0C10]">
+        <div className="w-full md:w-1/2 h-full flex items-center justify-center bg-[#0A0C10] overflow-y-auto">
           <div className="w-full max-w-sm p-6">
 
             {/* VPX Logo */}
@@ -86,7 +92,7 @@ function Register() {
                   placeholder="John Doe"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-lg bg-[#1E1F25] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm rounded-lg bg-[#1E1F25] border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:border-transparent"
                 />
               </div>
 
@@ -97,7 +103,7 @@ function Register() {
                   placeholder="you@example.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-lg bg-[#1E1F25] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm rounded-lg bg-[#1E1F25] border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:border-transparent"
                 />
               </div>
 
@@ -108,7 +114,18 @@ function Register() {
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-lg bg-[#1E1F25] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm rounded-lg bg-[#1E1F25] border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Confirm Password</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  className="w-full px-3 py-2 text-sm rounded-lg bg-[#1E1F25] border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00F0FF] focus:border-transparent"
                 />
               </div>
 

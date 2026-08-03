@@ -2,12 +2,10 @@ const express  = require('express');
 const router   = express.Router();
 const jwt      = require('jsonwebtoken');
 const passport = require('passport');
-const User     = require('../models/User');
-const { login, register, verifyEmail } = require('../controllers/authController');
+const { login, register } = require('../controllers/authController');
 
 router.post('/login',    login);
 router.post('/register', register);
-router.get('/verify-email', verifyEmail);
 
 router.get('/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
@@ -17,10 +15,6 @@ router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: `${process.env.CLIENT_URL}/login?error=google_failed` }),
   async (req, res) => {
     try {
-      if (!req.user.isVerified) {
-        await User.findByIdAndUpdate(req.user._id, { isVerified: true });
-      }
-
       const token = jwt.sign(
         { userId: req.user._id },
         process.env.JWT_SECRET,
