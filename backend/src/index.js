@@ -16,6 +16,7 @@ const { startMonitoring } = require('./services/alchemyService');
 const { startSolanaMonitoring } = require("./services/solanaService");
 const { startBaseMonitoring } = require("./services/baseService");
 const { startArbitrumMonitoring } = require("./services/arbitrumService");
+const { startSnapshotScheduler } = require("./services/snapshotService");
 
 const priceRoutes   = require('./routes/priceRoutes');
 const newsRoutes    = require('./routes/newsRoutes');
@@ -71,6 +72,7 @@ mongoose.connect(process.env.MONGO_URI)
       startSolanaMonitoring();
       startBaseMonitoring();
       startArbitrumMonitoring();
+      startSnapshotScheduler();
     });
   })
   .catch((err) => {

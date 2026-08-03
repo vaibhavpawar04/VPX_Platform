@@ -99,28 +99,23 @@ const getHoldings = async (req, res) => {
 const getSummary = async (req, res) => {
   try {
     const userId = req.userId;
-    const { getMarkets } = require('../services/marketsService');
+    const timeframe = req.query.timeframe || "1M";
+    const { getMarkets } = require("../services/marketsService");
     const markets = getMarkets();
-
     const balances = await Balance.find({ userId, amount: { $gt: 0 } });
-    const deposits = await Transaction.find({ userId, type: 'deposit', status: 'confirmed' });
-
+    const deposits = await Transaction.find({ userId, type: "deposit", status: "confirmed" });
     let totalValue = 0;
     let totalInvested = 0;
-    let bestAsset = { symbol: 'N/A', plPct: -Infinity };
-    let worstAsset = { symbol: 'N/A', plPct: Infinity };
-
+    let bestAsset = { symbol: "N/A", plPct: -Infinity };
+    let worstAsset = { symbol: "N/A", plPct: Infinity };
     for (const bal of balances) {
       const market = markets.find(m => m.symbol === bal.coin);
       const currentPrice = market?.price || 0;
       const currentValue = bal.amount * currentPrice;
       totalValue += currentValue;
-
-      // Calculate invested value
       const coinDeposits = deposits.filter(d => d.coin === bal.coin);
       let totalCost = 0;
       let totalDeposited = 0;
-
       for (const dep of coinDeposits) {
         if (dep.priceAtDeposit && dep.priceAtDeposit > 0) {
           totalCost += dep.amount * dep.priceAtDeposit;
@@ -130,21 +125,31 @@ const getSummary = async (req, res) => {
           totalDeposited += dep.amount;
         }
       }
-
       const avgBuyPrice = totalDeposited > 0 ? totalCost / totalDeposited : currentPrice;
       const investedValue = bal.amount * avgBuyPrice;
       totalInvested += investedValue;
-
       const pl = currentValue - investedValue;
       const plPct = investedValue > 0 ? (pl / investedValue) * 100 : 0;
-
       if (plPct > bestAsset.plPct) bestAsset = { symbol: bal.coin, plPct };
       if (plPct < worstAsset.plPct) worstAsset = { symbol: bal.coin, plPct };
     }
-
-    const totalPL = totalValue - totalInvested;
-    const totalPLPct = totalInvested > 0 ? (totalPL / totalInvested) * 100 : 0;
-
+    const TIMEFRAME_DAYS = { "1D": 1, "1W": 7, "1M": 30, "3M": 90, "1Y": 365 };
+    const days = TIMEFRAME_DAYS[timeframe] || 30;
+    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const PortfolioSnapshot = require("../models/PortfolioSnapshot");
+    const pastSnapshot = await PortfolioSnapshot.findOne({
+      userId,
+      createdAt: { $lte: cutoff },
+    }).sort({ createdAt: -1 });
+    let totalPL, totalPLPct, baselineValue;
+    if (pastSnapshot) {
+      baselineValue = pastSnapshot.totalValue;
+      totalPL = totalValue - baselineValue;
+      totalPLPct = baselineValue > 0 ? (totalPL / baselineValue) * 100 : 0;
+    } else {
+      totalPL = totalValue - totalInvested;
+      totalPLPct = totalInvested > 0 ? (totalPL / totalInvested) * 100 : 0;
+    }
     res.json({
       success: true,
       data: {
@@ -155,12 +160,13 @@ const getSummary = async (req, res) => {
         bestAsset:     bestAsset.symbol,
         worstAsset:    worstAsset.symbol,
         positive:      totalPL >= 0,
+        timeframe,
+        hasHistoricalData: !!pastSnapshot,
       }
     });
-
   } catch (err) {
-    console.log('Get summary error:', err.message);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.log("Get summary error:", err.message);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 

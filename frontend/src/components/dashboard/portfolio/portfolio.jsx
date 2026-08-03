@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "./portfolio.css";
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 const TIMEFRAMES   = ["1D", "1W", "1M", "3M", "1Y"];
 const TRADE_FILTERS = ["All", "Buy", "Sell", "Swap"];
@@ -38,6 +39,7 @@ const AllocationBar = ({ holdings }) => (
 
 const Portfolio = () => {
   const [timeframe, setTimeframe]     = useState("1M");
+  const [showBalance, setShowBalance] = useState(false);
   const [tradeFilter, setTradeFilter] = useState("All");
   const [holdings, setHoldings]       = useState([]);
   const [summary, setSummary]         = useState({
@@ -63,13 +65,13 @@ const Portfolio = () => {
 
   const fetchSummary = useCallback(async () => {
     try {
-      const res = await fetch('https://vpx-backend.onrender.com/api/portfolio/summary', {
+      const res = await fetch(`https://vpx-backend.onrender.com/api/portfolio/summary?timeframe=${timeframe}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       if (data.success) setSummary(data.data);
     } catch (err) { console.log('Summary error:', err); }
-  }, [token]);
+  }, [token, timeframe]);
 
   const fetchTrades = useCallback(async () => {
     try {
@@ -118,8 +120,15 @@ const Portfolio = () => {
       <div className="portfolio-overview">
         <div className="overview-main">
           <div className="overview-label">Total Portfolio Value</div>
-          <div className="overview-value">
-            {loading ? 'Loading...' : formatUSD(summary.totalValue)}
+          <div className="overview-value" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span>{loading ? "Loading..." : (showBalance ? formatUSD(summary.totalValue) : "••••••")}</span>
+            <button
+              onClick={() => setShowBalance(prev => !prev)}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#6B7280", display: "flex", alignItems: "center", padding: "4px" }}
+              aria-label={showBalance ? "Hide balance" : "Show balance"}
+            >
+              {showBalance ? <FiEye size={20} /> : <FiEyeOff size={20} />}
+            </button>
           </div>
           <div className={`overview-pl ${summary.positive ? 'positive' : 'negative'}`}>
             {summary.positive ? '▲' : '▼'} {summary.positive ? '+' : '-'}{formatUSD(summary.totalPL)} ({summary.positive ? '+' : ''}{summary.totalPLPct}%) all time

@@ -1,6 +1,9 @@
 .dashboard-container {
+  transform: scale(0.85);
+  transform-origin: top left;
+  width: 117.65%;
+  height: 117.65vh;
   display: flex;
-  height: 100vh;
   overflow: hidden;
   background: #0A0A0A;
   color: white;

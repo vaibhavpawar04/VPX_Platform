@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  FiHome, 
   FiTrendingUp, 
   FiRepeat, 
   FiCreditCard, 
@@ -12,39 +11,26 @@ import {
   FiHelpCircle,
   FiMail 
 } from 'react-icons/fi';
+import VPXLogo from '../../common/VPXLogo';
 import './sidebar.css';
 
 const Sidebar = () => {
   const location = useLocation();
-
-  const isActive = (path) => {
-    if (path === '/dashboard') {
-      return location.pathname === '/dashboard';
-    }
-    return location.pathname.includes(path);
-  };
+  const isActive = (path) => location.pathname.includes(path);
 
   return (
     <div className="sidebar">
       <div className="logo">
-        <img 
-          src="/VPX-logo.png" 
-          alt="VPX" 
-          style={{ 
-            height: '135px',
-            width: 'auto',
-            filter: 'brightness(0) invert(1)'
-          }} 
-        />
+        <VPXLogo size="lg" />
       </div>
-      
+
       <nav className="nav-menu">
         <div className="nav-section">
           <ul>
-            <li className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}>
-              <Link to="/dashboard" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', width: '100%' }}>
-                <FiHome className="icon" />
-                <span>Home</span>
+            <li className={`nav-item ${isActive('/portfolio') ? 'active' : ''}`}>
+              <Link to="/dashboard/portfolio" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', width: '100%' }}>
+                <FiBriefcase className="icon" />
+                <span>Portfolio</span>
               </Link>
             </li>
             <li className={`nav-item ${isActive('/markets') ? 'active' : ''}`}>
@@ -69,12 +55,6 @@ const Sidebar = () => {
               <Link to="/dashboard/pos" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', width: '100%' }}>
                 <FiBriefcase className="icon" />
                 <span>POS Terminal</span>
-              </Link>
-            </li>
-            <li className={`nav-item ${isActive('/portfolio') ? 'active' : ''}`}>
-              <Link to="/dashboard/portfolio" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', width: '100%' }}>
-                <FiBriefcase className="icon" />
-                <span>Portfolio</span>
               </Link>
             </li>
           </ul>

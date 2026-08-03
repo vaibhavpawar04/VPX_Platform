@@ -229,67 +229,7 @@ const Dashboard = () => {
         </div>
 
         <Routes>
-          <Route path="/" element={
-            <>
-              <div className="hero-section">
-                <h1>Trade Crypto Instantly</h1>
-                <p>Buy, sell, and accept crypto payments with real-time conversion</p>
-                <div className="stats">
-                  <div className="stat-item"><h3>$1.2B</h3><p>24h Volume</p></div>
-                  <div className="stat-item"><h3>500K+</h3><p>Active Users</p></div>
-                  <div className="stat-item"><h3>50+</h3><p>Supported Coins</p></div>
-                </div>
-              </div>
-
-              <div className="how-it-works">
-                <h2>How It Works</h2>
-                <div className="steps">
-                  <div className="step"><div className="step-icon">🔗</div><h3>1. Connect Wallet</h3><p>Connect your crypto wallet to start trading</p></div>
-                  <div className="step"><div className="step-icon">💰</div><h3>2. Deposit Funds</h3><p>Add crypto or fiat to your account</p></div>
-                  <div className="step"><div className="step-icon">🔄</div><h3>3. Start Trading</h3><p>Buy/sell crypto or accept payments via POS</p></div>
-                </div>
-              </div>
-
-              <div className="features">
-                <h2>Why Choose VPX</h2>
-                <div className="feature-grid">
-                  <div className="feature-card"><div className="feature-icon">💳</div><h3>POS Auto-Conversion</h3><p>Accept any crypto, get paid in your preferred currency</p></div>
-                  <div className="feature-card"><div className="feature-icon">⚡</div><h3>Real-time Rates</h3><p>Live conversion rates from top exchanges</p></div>
-                  <div className="feature-card"><div className="feature-icon">🔒</div><h3>Bank-grade Security</h3><p>Your assets are protected with multi-layer security</p></div>
-                  <div className="feature-card"><div className="feature-icon">🎧</div><h3>24/7 Support</h3><p>Round-the-clock customer support</p></div>
-                </div>
-              </div>
-
-              <div className="supported-coins">
-                <h2>Supported Currencies</h2>
-                <div className="coin-grid">
-                  <div className="coin-card">Bitcoin (BTC)</div>
-                  <div className="coin-card">Ethereum (ETH)</div>
-                  <div className="coin-card">Solana (SOL)</div>
-                  <div className="coin-card">Binance Coin (BNB)</div>
-                  <div className="coin-card">Cardano (ADA)</div>
-                  <div className="coin-card">Polygon (MATIC)</div>
-                  <div className="coin-card">Dogecoin (DOGE)</div>
-                  <div className="coin-card">Ripple (XRP)</div>
-                </div>
-              </div>
-
-              <div className="testimonials">
-                <h2>What Our Users Say</h2>
-                <div className="testimonial-cards">
-                  <div className="testimonial"><p>"Best crypto POS system. Auto-conversion is a game changer for my business."</p><h4>- Alex, Merchant</h4></div>
-                  <div className="testimonial"><p>"Fast trades, low fees, and the interface is super clean. Love it!"</p><h4>- Sarah, Trader</h4></div>
-                  <div className="testimonial"><p>"The real-time conversion feature saves me so much time. Highly recommended."</p><h4>- Mike, Retailer</h4></div>
-                </div>
-              </div>
-
-              <div className="cta-section">
-                <h2>Start Trading Today</h2>
-                <p>Join thousands of users already trading on VPX</p>
-                <button className="cta-btn">Get Started</button>
-              </div>
-            </>
-          } />
+          <Route path="/" element={<Portfolio />} />
           <Route path="/markets" element={<Markets />} />
           <Route path="/trade" element={<Trade />} />
           <Route path="/wallet" element={<Wallet />} />

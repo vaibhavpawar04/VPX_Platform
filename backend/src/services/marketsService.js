@@ -1,9 +1,6 @@
 const https = require('https');
-
 const REFRESH_INTERVAL = 30 * 1000; // 30 seconds
-
 let marketsData = [];
-
 const STABLE_COINS = ['USDT', 'USDC', 'DAI', 'BUSD', 'TUSD', 'USDP', 'USDD', 'GUSD'];
 const MEME_COINS   = ['DOGE', 'SHIB', 'PEPE', 'FLOKI', 'BONK', 'WIF', 'MEME', 'BABYDOGE'];
 const DEFI_COINS   = ['UNI', 'AAVE', 'COMP', 'MKR', 'SNX', 'CRV', 'SUSHI', 'YFI', 'BAL'];
@@ -19,18 +16,14 @@ const fetchMarkets = () => {
       'Accept': 'application/json',
     }
   };
-
   const req = https.request(options, (res) => {
     let data = '';
-
     res.on('data', (chunk) => {
       data += chunk;
     });
-
     res.on('end', () => {
       try {
         const parsed = JSON.parse(data);
-
         // Filter only USDT pairs and format data
         marketsData = parsed
           .filter(item => item.symbol.endsWith('USDT'))
@@ -51,17 +44,27 @@ const fetchMarkets = () => {
           .sort((a, b) => b.volume24h - a.volume24h)
           .slice(0, 100); // Top 100 by volume
 
+        // USDT has no self-paired trading pair on Binance, so inject it manually at $1 (stablecoin peg)
+        marketsData.push({
+          symbol: 'USDT',
+          name: 'Tether',
+          price: 1.00,
+          change24h: 0,
+          volume24h: 0,
+          high24h: 1.00,
+          low24h: 1.00,
+          category: 'stable',
+        });
+
         console.log(`Markets updated: ${marketsData.length} coins fetched`);
       } catch (err) {
         console.log('Error parsing markets:', err.message);
       }
     });
   });
-
   req.on('error', (err) => {
     console.log('Error fetching markets:', err.message);
   });
-
   req.end();
 };
 
@@ -99,5 +102,4 @@ const startMarketsService = () => {
 };
 
 const getMarkets = () => marketsData;
-
 module.exports = { startMarketsService, getMarkets };
