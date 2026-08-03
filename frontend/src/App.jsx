@@ -4,7 +4,7 @@ import Login from './components/login/login';
 import Dashboard from './components/dashboard/dashboard';
 import HomePage from './components/home/HomePage';
 import Register from './components/register/Register';
-
+import VerifyEmail from './components/verify-email/VerifyEmail';
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -12,7 +12,6 @@ const ProtectedRoute = ({ children }) => {
   }
   return children;
 };
-
 function App() {
   return (
     <BrowserRouter>
@@ -20,6 +19,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/auth/callback" element={<GoogleCallback />} />
         <Route path="/dashboard/*" element={
           <ProtectedRoute>
@@ -30,5 +30,4 @@ function App() {
     </BrowserRouter>
   );
 }
-
 export default App;
