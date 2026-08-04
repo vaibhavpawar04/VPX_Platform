@@ -1,5 +1,5 @@
 const https = require('https');
-const REFRESH_INTERVAL = 3 * 60 * 1000; // 3 minutes (reduced to avoid Binance rate-limit bans)
+const REFRESH_INTERVAL = 60 * 1000; // 1 minute — CoinGecko free tier is generous, no weight-based bans
 let marketsData = [];
 const STABLE_COINS = ['USDT', 'USDC', 'DAI', 'BUSD', 'TUSD', 'USDP', 'USDD', 'GUSD'];
 const MEME_COINS   = ['DOGE', 'SHIB', 'PEPE', 'FLOKI', 'BONK', 'WIF', 'MEME', 'BABYDOGE'];
@@ -8,11 +8,10 @@ const LAYER1_COINS = ['BTC', 'ETH', 'SOL', 'BNB', 'ADA', 'AVAX', 'DOT', 'NEAR', 
 
 const fetchMarkets = () => {
   const options = {
-    hostname: 'api.binance.com',
-    path: '/api/v3/ticker/24hr',
+    hostname: 'api.coingecko.com',
+    path: '/api/v3/coins/markets?vs_currency=usd&order=volume_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h',
     method: 'GET',
     headers: {
-      'User-Agent': 'Mozilla/5.0',
       'Accept': 'application/json',
     }
   };
@@ -24,42 +23,32 @@ const fetchMarkets = () => {
     res.on('end', () => {
       try {
         const parsed = JSON.parse(data);
-        // Filter only USDT pairs and format data
-        marketsData = parsed
-          .filter(item => item.symbol.endsWith('USDT'))
-          .map(item => {
-            const symbol = item.symbol.replace('USDT', '');
-            return {
-              symbol,
-              name:      getName(symbol),
-              price:     parseFloat(item.lastPrice),
-              change24h: parseFloat(item.priceChangePercent),
-              volume24h: parseFloat(item.quoteVolume),
-              high24h:   parseFloat(item.highPrice),
-              low24h:    parseFloat(item.lowPrice),
-              category:  getCategory(symbol),
-            };
-          })
-          .filter(item => item.price > 0)
-          .sort((a, b) => b.volume24h - a.volume24h)
-          .slice(0, 100); // Top 100 by volume
 
-        // USDT has no self-paired trading pair on Binance, so inject it manually at $1 (stablecoin peg)
-        marketsData.push({
-          symbol: 'USDT',
-          name: 'Tether',
-          price: 1.00,
-          change24h: 0,
-          volume24h: 0,
-          high24h: 1.00,
-          low24h: 1.00,
-          category: 'stable',
-        });
+        if (!Array.isArray(parsed)) {
+          console.log('Error parsing markets: unexpected response shape');
+          console.log('Raw CoinGecko response (first 300 chars):', data.slice(0, 300));
+          return;
+        }
+
+        marketsData = parsed
+          .filter(item => item.current_price > 0)
+          .map(item => ({
+            symbol:    item.symbol.toUpperCase(),
+            name:      item.name,
+            price:     item.current_price,
+            change24h: item.price_change_percentage_24h || 0,
+            volume24h: item.total_volume,
+            high24h:   item.high_24h,
+            low24h:    item.low_24h,
+            category:  getCategory(item.symbol.toUpperCase()),
+          }))
+          .sort((a, b) => b.volume24h - a.volume24h)
+          .slice(0, 100);
 
         console.log(`Markets updated: ${marketsData.length} coins fetched`);
       } catch (err) {
         console.log('Error parsing markets:', err.message);
-        try { console.log('Raw Binance response (first 300 chars):', data.slice(0, 300)); } catch (e) {}
+        console.log('Raw CoinGecko response (first 300 chars):', data.slice(0, 300));
       }
     });
   });
@@ -67,25 +56,6 @@ const fetchMarkets = () => {
     console.log('Error fetching markets:', err.message);
   });
   req.end();
-};
-
-const getName = (symbol) => {
-  const names = {
-    BTC: 'Bitcoin',     ETH: 'Ethereum',  SOL: 'Solana',
-    BNB: 'BNB',         XRP: 'XRP',       ADA: 'Cardano',
-    DOGE: 'Dogecoin',   SHIB: 'Shiba Inu',AVAX: 'Avalanche',
-    DOT: 'Polkadot',    MATIC: 'Polygon', LINK: 'Chainlink',
-    UNI: 'Uniswap',     ATOM: 'Cosmos',   LTC: 'Litecoin',
-    NEAR: 'NEAR',       ALGO: 'Algorand', FTM: 'Fantom',
-    AAVE: 'Aave',       MKR: 'Maker',     COMP: 'Compound',
-    PEPE: 'Pepe',       FLOKI: 'Floki',   BONK: 'Bonk',
-    WIF: 'dogwifhat',   USDT: 'Tether',   USDC: 'USD Coin',
-    DAI: 'Dai',         BUSD: 'BUSD',     ARB: 'Arbitrum',
-    OP: 'Optimism',     IMX: 'Immutable', APT: 'Aptos',
-    SUI: 'Sui',         SEI: 'Sei',       TIA: 'Celestia',
-    INJ: 'Injective',   FET: 'Fetch.ai',  RNDR: 'Render',
-  };
-  return names[symbol] || symbol;
 };
 
 const getCategory = (symbol) => {
@@ -99,7 +69,7 @@ const getCategory = (symbol) => {
 const startMarketsService = () => {
   fetchMarkets();
   setInterval(fetchMarkets, REFRESH_INTERVAL);
-  console.log('Markets service started - refreshing every 30 seconds');
+  console.log('Markets service started - refreshing every 60 seconds (CoinGecko)');
 };
 
 const getMarkets = () => marketsData;
