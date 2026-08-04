@@ -341,7 +341,7 @@ const stripeWebhook = async (req, res) => {
       userId: paymentIntent.metadata?.userId || null,
       type: 'pos_payment',
       stripePaymentId: paymentIntent.id,
-      status: 'processing',
+      status: 'pending',
     });
   } catch (err) {
     if (err.code === 11000) {
