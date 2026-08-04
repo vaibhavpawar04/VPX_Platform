@@ -59,6 +59,7 @@ const fetchMarkets = () => {
         console.log(`Markets updated: ${marketsData.length} coins fetched`);
       } catch (err) {
         console.log('Error parsing markets:', err.message);
+        try { console.log('Raw Binance response (first 300 chars):', data.slice(0, 300)); } catch (e) {}
       }
     });
   });

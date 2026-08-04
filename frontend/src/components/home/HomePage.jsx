@@ -84,14 +84,44 @@ const HomePage = () => {
       <circle cx='0' cy='14' r='3' fill='#EF4444' fillOpacity='0.5'/>
     </svg>
   );
+  const SplitPaymentIcon = () => (
+    <svg width="40" height="40" viewBox="-36 -36 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="0" cy="-20" r="4" stroke="#EC4899" strokeWidth="2"/>
+      <path d="M 0,-16 L 0,-4" stroke="#EC4899" strokeWidth="2"/>
+      <path d="M 0,-4 L -16,10" stroke="#EC4899" strokeWidth="2"/>
+      <path d="M 0,-4 L 0,10" stroke="#EC4899" strokeWidth="2"/>
+      <path d="M 0,-4 L 16,10" stroke="#EC4899" strokeWidth="2"/>
+      <circle cx="-16" cy="16" r="4" stroke="#EC4899" strokeWidth="2" fill="#EC489920"/>
+      <circle cx="0" cy="16" r="4" stroke="#EC4899" strokeWidth="2" fill="#EC489920"/>
+      <circle cx="16" cy="16" r="4" stroke="#EC4899" strokeWidth="2" fill="#EC489920"/>
+    </svg>
+  );
+  const PortfolioTrackingIcon = () => (
+    <svg width="40" height="40" viewBox="-36 -36 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M -20,20 L -20,-18" stroke="#22D3EE" strokeWidth="1.5" strokeOpacity="0.4"/>
+      <path d="M -20,20 L 20,20" stroke="#22D3EE" strokeWidth="1.5" strokeOpacity="0.4"/>
+      <polyline points="-18,10 -8,0 2,6 18,-16" stroke="#22D3EE" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <polyline points="10,-16 18,-16 18,-8" stroke="#22D3EE" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+  const WatchlistIcon = () => (
+    <svg width="40" height="40" viewBox="-36 -36 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M -22,0 C -16,-14 16,-14 22,0 C 16,14 -16,14 -22,0 Z" stroke="#A78BFA" strokeWidth="2"/>
+      <circle cx="0" cy="0" r="7" stroke="#A78BFA" strokeWidth="2"/>
+      <circle cx="0" cy="0" r="2.5" fill="#A78BFA"/>
+    </svg>
+  );
 
   const features = [
-    { icon: <SettlementIcon />, title: 'Sub-2s Settlement', desc: 'Faster than Visa. Every payment confirmed and settled in under 2 seconds via real DEX swaps.', color: '#00F0FF' },
+    { icon: <SettlementIcon />, title: 'Sub-2s Settlement', desc: 'Faster than traditional card networks. Every payment confirmed and settled in under 2 seconds via real DEX swaps.', color: '#00F0FF' },
     { icon: <SwapIcon />, title: 'Auto DEX Liquidation', desc: 'Crypto is automatically swapped to USDC via Uniswap V3 and Orca Whirlpools — no manual steps.', color: '#4D7EFF' },
     { icon: <GlobalIcon />, title: '20+ Fiat Currencies', desc: 'Merchants receive GBP, EUR, USD, INR and 17 more currencies via live exchange rates.', color: '#10B981' },
     { icon: <PrefsIcon />, title: 'Payment Preferences', desc: 'Choose which coins get spent first, or exclude specific assets entirely from payments.', color: '#F59E0B' },
     { icon: <ChainIcon />, title: 'On-Chain Proof', desc: 'Every transaction produces a verifiable hash on Etherscan or Solscan. Fully transparent.', color: '#8B5CF6' },
     { icon: <MultiChainIcon />, title: 'Multi-Chain Wallet', desc: 'One wallet, four blockchains. ETH, SOL, BASE and ARB — auto-generated on signup.', color: '#EF4444' },
+    { icon: <SplitPaymentIcon />, title: 'Flexible Payment Splitting', desc: 'Pay with priority order, portfolio-weighted split, or send crypto directly to merchants who accept it.', color: '#EC4899' },
+    { icon: <PortfolioTrackingIcon />, title: 'Live Portfolio Tracking', desc: 'Track P&L across 1D, 1W, 1M, 3M and 1Y with real historical snapshots — not estimates.', color: '#22D3EE' },
+    { icon: <WatchlistIcon />, title: 'Custom Watchlist', desc: 'Track any coin you care about — add or remove instantly, saved to your account.', color: '#A78BFA' },
   ];
 
   const steps = [
@@ -106,13 +136,13 @@ const HomePage = () => {
           <polyline points='13 2 13 9 22 9'/><polyline points='11 22 11 15 2 15'/>
           <path d='M22 9L13 2 2 9'/><path d='M2 15l9 7 11-7'/>
         </svg>
-      ), title: 'Crypto Deducted', desc: 'Proportional split across your holdings', color: '#4D7EFF' },
+      ), title: 'Crypto Deducted', desc: 'Split by priority, portfolio weight, or your custom preference', color: '#4D7EFF' },
     { icon: (
         <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>
           <path d='M3 8 A11 11 0 0 1 21 8'/><polyline points='17 4 21 8 17 12'/>
           <path d='M21 16 A11 11 0 0 1 3 16'/><polyline points='7 20 3 16 7 12'/>
         </svg>
-      ), title: 'DEX Swap', desc: 'ETH→USDC via Uniswap, SOL→USDC via Orca', color: '#8B5CF6' },
+      ), title: 'DEX Swap or Direct', desc: 'Auto-swapped via Uniswap/Orca, or sent as crypto if merchant accepts it', color: '#8B5CF6' },
     { icon: (
         <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>
           <rect x='2' y='7' width='20' height='14' rx='2'/>
@@ -241,7 +271,7 @@ const HomePage = () => {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: 'rgba(255,255,255,0.04)', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.04)' }}>
             {features.map(({ icon, title, desc, color }) => (
-              <div key={title} style={{ background: '#0A0D12', padding: '28px', transition: 'background 0.3s', cursor: 'default' }}
+              <div key={title} style={{ background: '#0A0D12', padding: '28px', transition: 'background 0.3s', cursor: 'default', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                 onMouseEnter={e => e.currentTarget.style.background = '#0F1318'}
                 onMouseLeave={e => e.currentTarget.style.background = '#0A0D12'}
               >
@@ -262,6 +292,7 @@ const HomePage = () => {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0', position: 'relative' }}>
             <div style={{ position: 'absolute', top: '28px', left: '12.5%', right: '12.5%', height: '1px', background: 'linear-gradient(90deg, #00F0FF, #4D7EFF, #8B5CF6, #10B981)', opacity: 0.3, zIndex: 0 }} />
+            <div style={{ position: 'absolute', top: '25px', width: '8px', height: '8px', borderRadius: '50%', background: '#00F0FF', boxShadow: '0 0 12px 2px #00F0FF', zIndex: 1, animation: 'flowLine 3s linear infinite' }} />
             {steps.map(({ icon, title, desc, color }, i) => (
               <div key={i} style={{ padding: '0 24px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
                 <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: `${color}12`, border: `1px solid ${color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: '1.3rem' }}>{icon}</div>
@@ -346,7 +377,7 @@ const HomePage = () => {
         </div>
       </footer>
 
-      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
+      <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } } @keyframes flowLine { 0% { left: 12.5%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { left: 87.5%; opacity: 0; } }`}</style>
     </div>
   );
 };

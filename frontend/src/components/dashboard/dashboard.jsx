@@ -138,6 +138,10 @@ const Dashboard = () => {
 
 
   useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+  useEffect(() => {
     const fetchNews = async () => {
       try {
         const res = await fetch('https://vpx-backend.onrender.com/api/news');
