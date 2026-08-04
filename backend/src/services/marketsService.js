@@ -14,6 +14,7 @@ const fetchMarkets = () => {
     headers: {
       'Accept': 'application/json',
       'User-Agent': 'VPX-Platform/1.0 (https://vpx-platform.vercel.app)',
+      'x-cg-demo-api-key': process.env.COINGECKO_API_KEY,
     }
   };
   const req = https.request(options, (res) => {
