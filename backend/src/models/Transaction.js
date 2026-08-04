@@ -32,7 +32,7 @@ const transactionSchema = new mongoose.Schema({
   fiatAmount:       { type: Number },
   fiatCurrency:     { type: String },
   usdAmount:        { type: Number },
-  stripePaymentId:  { type: String },
+  stripePaymentId:  { type: String, unique: true, sparse: true },
   breakdown:        { type: Array, default: [] },
   processingTimeMs: { type: Number },
   // Merchant payout
