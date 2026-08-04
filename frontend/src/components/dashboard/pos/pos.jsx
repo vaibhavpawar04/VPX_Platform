@@ -96,6 +96,7 @@ const POS = () => {
 
   const token = localStorage.getItem('token');
 
+
   // Fetch live exchange rates — only used for summary total conversion
   useEffect(() => {
     const fetchRates = async () => {

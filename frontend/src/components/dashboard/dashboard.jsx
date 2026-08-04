@@ -19,6 +19,12 @@ const Dashboard = () => {
   const [news, setNews] = useState([]);
   const [watchlist, setWatchlist] = useState([]);
   const token = localStorage.getItem('token');
+  const [testAmount, setTestAmount] = useState('10');
+  const [testCurrency, setTestCurrency] = useState('USD');
+  const [testMerchantId, setTestMerchantId] = useState('');
+  const [merchants, setMerchants] = useState([]);
+  const [testStatus, setTestStatus] = useState('');
+  const [testLoading, setTestLoading] = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [walletAddress, setWalletAddress] = useState(() => localStorage.getItem('walletAddress') || '');
@@ -173,6 +179,45 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, [token]);
 
+  useEffect(() => {
+    const fetchMerchants = async () => {
+      try {
+        const res = await fetch("https://vpx-backend.onrender.com/api/pos/merchants", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.data.length > 0) {
+          setMerchants(data.data);
+          setTestMerchantId(data.data[0].merchantId);
+        }
+      } catch (err) {
+        console.log("Fetch merchants error:", err);
+      }
+    };
+    fetchMerchants();
+  }, [token]);
+
+  const handleTestPayment = async () => {
+    setTestLoading(true);
+    setTestStatus("");
+    try {
+      const res = await fetch("https://vpx-backend.onrender.com/api/pos/simulate-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ amount: testAmount, currency: testCurrency, merchantId: testMerchantId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTestStatus("SUCCESS: Payment triggered! Check POS transaction history shortly.");
+      } else {
+        setTestStatus(`ERROR: ${data.message || "Payment failed"}`);
+      }
+    } catch (err) {
+      setTestStatus("ERROR: Cannot connect to server");
+    }
+    setTestLoading(false);
+  };
+
   const formatPrice = (symbol, price) => {
     if (price === null) return '---';
     if (price >= 1000) return `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -274,6 +319,46 @@ const Dashboard = () => {
               </div>
             ))
           )}
+        </div>
+        <div className="news-section" style={{ marginTop: "12px" }}>
+          <h3>Test Payment</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <input
+              type="number"
+              value={testAmount}
+              onChange={e => setTestAmount(e.target.value)}
+              placeholder="Amount"
+              style={{ padding: "8px", background: "#0A0C10", border: "1px solid #333", borderRadius: "6px", color: "white", fontSize: "0.85rem" }}
+            />
+            <select
+              value={testCurrency}
+              onChange={e => setTestCurrency(e.target.value)}
+              style={{ padding: "8px", background: "#0A0C10", border: "1px solid #333", borderRadius: "6px", color: "white", fontSize: "0.85rem" }}
+            >
+              {["USD", "EUR", "GBP", "INR"].map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select
+              value={testMerchantId}
+              onChange={e => setTestMerchantId(e.target.value)}
+              style={{ padding: "8px", background: "#0A0C10", border: "1px solid #333", borderRadius: "6px", color: "white", fontSize: "0.85rem" }}
+            >
+              {merchants.map(m => (
+                <option key={m.merchantId} value={m.merchantId}>{m.businessName} ({m.currency})</option>
+              ))}
+            </select>
+            <button
+              onClick={handleTestPayment}
+              disabled={testLoading || !testMerchantId}
+              style={{ padding: "9px", background: "linear-gradient(135deg, #00F0FF, #4D7EFF)", border: "none", borderRadius: "6px", color: "#000", fontWeight: "700", fontSize: "0.85rem", cursor: testLoading ? "not-allowed" : "pointer", opacity: testLoading ? 0.6 : 1 }}
+            >
+              {testLoading ? "Processing..." : "Trigger Payment"}
+            </button>
+            {testStatus && (
+              <div style={{ color: testStatus.startsWith("SUCCESS") ? "#10B981" : "#EF4444", fontSize: "0.78rem" }}>
+                {testStatus}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

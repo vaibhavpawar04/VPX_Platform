@@ -411,4 +411,45 @@ const getPOSSummary = async (req, res) => {
   }
 };
 
-module.exports = { stripeWebhook, getPOSTransactions, getPOSSummary };
+
+// GET /api/pos/merchants
+const getMerchants = async (req, res) => {
+  try {
+    const merchants = await Merchant.find({}, 'merchantId businessName currency acceptsCrypto');
+    res.json({ success: true, data: merchants });
+  } catch (err) {
+    console.log('Get merchants error:', err.message);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// POST /api/pos/simulate-payment (creates and confirms a real Stripe test payment)
+const simulatePayment = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { amount, currency, merchantId } = req.body;
+
+    if (!amount || !currency || !merchantId) {
+      return res.status(400).json({ success: false, message: 'amount, currency, and merchantId are required' });
+    }
+
+    const stripe = getStripe();
+    const amountInSmallestUnit = Math.round(parseFloat(amount) * 100);
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountInSmallestUnit,
+      currency: currency.toLowerCase(),
+      payment_method: 'pm_card_visa',
+      confirm: true,
+      automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
+      metadata: { userId, merchantId },
+    });
+
+    res.json({ success: true, message: 'Test payment triggered', paymentIntentId: paymentIntent.id, status: paymentIntent.status });
+  } catch (err) {
+    console.log('Simulate payment error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+module.exports = { stripeWebhook, getPOSTransactions, getPOSSummary, getMerchants, simulatePayment };
