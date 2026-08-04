@@ -58,6 +58,8 @@ const Wallet = () => {
   const [showPreferences, setShowPreferences]     = useState(false);
   const [priorityOrder, setPriorityOrder]         = useState(SUPPORTED_COINS);
   const [excludedCoins, setExcludedCoins]         = useState([]);
+  const [paymentMode, setPaymentMode]             = useState("priority");
+  const [fallbackSplitMode, setFallbackSplitMode] = useState("priority");
   const [prefsLoading, setPrefsLoading]           = useState(false);
   const [prefsMsg, setPrefsMsg]                   = useState('');
   const [dragIndex, setDragIndex]                 = useState(null);
@@ -94,6 +96,8 @@ const Wallet = () => {
         if (data.success) {
           setPriorityOrder(data.data.priorityOrder || SUPPORTED_COINS);
           setExcludedCoins(data.data.excludedCoins || []);
+          setPaymentMode(data.data.mode || "priority");
+          setFallbackSplitMode(data.data.fallbackSplitMode || "priority");
         }
       } catch (err) { console.log('Fetch prefs error:', err); }
     };
@@ -275,7 +279,7 @@ const Wallet = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ priorityOrder, excludedCoins }),
+        body: JSON.stringify({ priorityOrder, excludedCoins, mode: paymentMode, fallbackSplitMode }),
       });
       const data = await res.json();
       if (data.success) {
@@ -424,6 +428,69 @@ const Wallet = () => {
             <div style={{ color: '#888', fontSize: '0.82rem', marginBottom: '16px', lineHeight: '1.5' }}>
               Drag to reorder payment priority. Excluded coins will never be used for POS payments.
             </div>
+
+            <div style={{ display: "flex", gap: "10px", marginBottom: "18px" }}>
+              {[
+                { key: "priority", label: "Priority Order" },
+                { key: "weighted", label: "Portfolio Weighted" },
+                { key: "direct_crypto", label: "Direct Crypto" },
+              ].map(opt => (
+                <button
+                  key={opt.key}
+                  onClick={() => setPaymentMode(opt.key)}
+                  style={{
+                    flex: 1,
+                    padding: "10px",
+                    borderRadius: "8px",
+                    border: paymentMode === opt.key ? "1px solid #00F0FF" : "1px solid #333",
+                    background: paymentMode === opt.key ? "rgba(0,240,255,0.1)" : "transparent",
+                    color: paymentMode === opt.key ? "#00F0FF" : "#888",
+                    fontSize: "0.82rem",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {paymentMode === "weighted" && (
+              <div style={{ color: "#888", fontSize: "0.78rem", marginBottom: "16px" }}>
+                Payment splits proportionally to your current portfolio percentages. Excluded coins are skipped and remaining coins re-weighted.
+              </div>
+            )}
+
+            {paymentMode === "direct_crypto" && (
+              <div style={{ marginBottom: "18px" }}>
+                <div style={{ color: "#888", fontSize: "0.78rem", marginBottom: "10px" }}>
+                  If the merchant accepts crypto directly, coins are sent as-is with no conversion. If not, payment falls back to:
+                </div>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  {[
+                    { key: "priority", label: "Priority Order" },
+                    { key: "weighted", label: "Portfolio Weighted" },
+                  ].map(opt => (
+                    <button
+                      key={opt.key}
+                      onClick={() => setFallbackSplitMode(opt.key)}
+                      style={{
+                        padding: "8px 14px",
+                        borderRadius: "8px",
+                        border: fallbackSplitMode === opt.key ? "1px solid #4D7EFF" : "1px solid #333",
+                        background: fallbackSplitMode === opt.key ? "rgba(77,126,255,0.1)" : "transparent",
+                        color: fallbackSplitMode === opt.key ? "#4D7EFF" : "#888",
+                        fontSize: "0.78rem",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {priorityOrder.map((coin, index) => {
