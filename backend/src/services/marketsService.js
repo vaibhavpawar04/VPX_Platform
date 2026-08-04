@@ -13,6 +13,7 @@ const fetchMarkets = () => {
     method: 'GET',
     headers: {
       'Accept': 'application/json',
+      'User-Agent': 'VPX-Platform/1.0 (https://vpx-platform.vercel.app)',
     }
   };
   const req = https.request(options, (res) => {
