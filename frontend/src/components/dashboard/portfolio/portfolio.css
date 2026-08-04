@@ -28,7 +28,7 @@
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #00F0FF, rgba(255,255,255,0.15));
+  background: linear-gradient(90deg, #00F0FF, #FF9800);
 }
 
 .overview-label {
@@ -69,8 +69,8 @@
   transition: all 0.2s;
 }
 
-.timeframe-tab:hover { background: rgba(255,152,0,0.15); color: rgba(255,255,255,0.15); }
-.timeframe-tab.active { background: rgba(255,255,255,0.15); color: #000; font-weight: 600; }
+.timeframe-tab:hover { background: rgba(255,152,0,0.15); color: #FF9800; }
+.timeframe-tab.active { background: #FF9800; color: #000; font-weight: 600; }
 
 .overview-stats {
   display: grid;
@@ -128,7 +128,7 @@
 }
 
 .allocation-segment:nth-child(1) { background: #00F0FF; }
-.allocation-segment:nth-child(2) { background: rgba(255,255,255,0.15); }
+.allocation-segment:nth-child(2) { background: #FF9800; }
 .allocation-segment:nth-child(3) { background: #26a69a; }
 .allocation-segment:nth-child(4) { background: #ef5350; }
 .allocation-segment:nth-child(5) { background: #888; }
@@ -244,8 +244,8 @@
   transition: all 0.2s;
 }
 
-.filter-tab:hover { background: rgba(255,152,0,0.15); color: rgba(255,255,255,0.15); }
-.filter-tab.active { background: rgba(255,255,255,0.15); color: #000; font-weight: 600; }
+.filter-tab:hover { background: rgba(255,152,0,0.15); color: #FF9800; }
+.filter-tab.active { background: #FF9800; color: #000; font-weight: 600; }
 
 .trade-list {
   display: flex;

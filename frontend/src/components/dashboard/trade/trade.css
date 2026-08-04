@@ -39,7 +39,7 @@
 }
 
 .selected-pair:hover {
-  border-color: rgba(255,255,255,0.15);
+  border-color: #FF9800;
   box-shadow: 0 0 15px rgba(255, 152, 0, 0.2);
 }
 
@@ -50,7 +50,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #00F0FF, rgba(255,255,255,0.15));
+  background: linear-gradient(135deg, #00F0FF, #FF9800);
   border-radius: 8px;
   color: #000;
   font-weight: bold;
@@ -196,7 +196,7 @@
 }
 
 .timeframe-btn:hover {
-  background: rgba(255,255,255,0.15);
+  background: #FF9800;
   color: #000;
 }
 
@@ -430,13 +430,13 @@
 }
 
 .type-btn:hover {
-  border-color: rgba(255,255,255,0.15);
+  border-color: #FF9800;
 }
 
 .type-btn.active {
-  background: rgba(255,255,255,0.15);
+  background: #FF9800;
   color: #000;
-  border-color: rgba(255,255,255,0.15);
+  border-color: #FF9800;
 }
 
 .input-group {
@@ -499,7 +499,7 @@
 }
 
 .percentage-btns button:hover {
-  background: rgba(255,255,255,0.15);
+  background: #FF9800;
   color: #000;
 }
 
@@ -645,7 +645,7 @@
   display: flex;
   justify-content: space-between;
   padding: 10px 0;
-  color: rgba(255,255,255,0.15);
+  color: #FF9800;
   font-weight: 600;
   border-top: 1px solid #333;
   border-bottom: 1px solid #333;
