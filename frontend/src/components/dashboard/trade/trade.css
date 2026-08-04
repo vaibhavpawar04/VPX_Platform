@@ -39,7 +39,7 @@
 }
 
 .selected-pair:hover {
-  border-color: #FF9800;
+  border-color: rgba(255,255,255,0.15);
   box-shadow: 0 0 15px rgba(255, 152, 0, 0.2);
 }
 
@@ -50,7 +50,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #00F0FF, #FF9800);
+  background: linear-gradient(135deg, #00F0FF, rgba(255,255,255,0.15));
   border-radius: 8px;
   color: #000;
   font-weight: bold;
@@ -196,7 +196,7 @@
 }
 
 .timeframe-btn:hover {
-  background: #FF9800;
+  background: rgba(255,255,255,0.15);
   color: #000;
 }
 
@@ -430,13 +430,13 @@
 }
 
 .type-btn:hover {
-  border-color: #FF9800;
+  border-color: rgba(255,255,255,0.15);
 }
 
 .type-btn.active {
-  background: #FF9800;
+  background: rgba(255,255,255,0.15);
   color: #000;
-  border-color: #FF9800;
+  border-color: rgba(255,255,255,0.15);
 }
 
 .input-group {
@@ -499,7 +499,7 @@
 }
 
 .percentage-btns button:hover {
-  background: #FF9800;
+  background: rgba(255,255,255,0.15);
   color: #000;
 }
 
@@ -645,7 +645,7 @@
   display: flex;
   justify-content: space-between;
   padding: 10px 0;
-  color: #FF9800;
+  color: rgba(255,255,255,0.15);
   font-weight: 600;
   border-top: 1px solid #333;
   border-bottom: 1px solid #333;
@@ -721,7 +721,7 @@
 }
 
 .trades-list::-webkit-scrollbar-thumb {
-  background: #FF9800;
+  background: rgba(255,255,255,0.15);
   border-radius: 4px;
 }
 

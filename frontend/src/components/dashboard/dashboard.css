@@ -394,28 +394,23 @@
   box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
   transform: scale(1.05);
 }
-
 /* Custom Scrollbar */
 .main-content::-webkit-scrollbar {
-  width: 6px; /* Thin scrollbar */
+  width: 6px;
 }
-
 .main-content::-webkit-scrollbar-track {
-  background: #1E1E1E; /* Dark track */
-  border-radius: 10px;
+  background: transparent;
 }
-
 .main-content::-webkit-scrollbar-thumb {
-  background: #FF9800; /* Orange thumb */
+  background: rgba(255,255,255,0.15);
   border-radius: 10px;
 }
-
 .main-content::-webkit-scrollbar-thumb:hover {
-  background: #00F0FF; /* Neon blue on hover */
+  background: rgba(255,255,255,0.35);
 }
 
 
 .main-content {
   scrollbar-width: thin;
-  scrollbar-color: #FF9800 #1E1E1E;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
 }

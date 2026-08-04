@@ -24,13 +24,15 @@ const formatUSD = (val) => {
   return '$' + Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
+const ALLOCATION_COLORS = ["#00F0FF", "#F5C542", "#26a69a", "#ef5350", "#8B5CF6", "#F97316"];
+
 const AllocationBar = ({ holdings }) => (
   <div className="allocation-bar">
     {holdings.map((h, i) => (
       <div
         key={i}
         className="allocation-segment"
-        style={{ width: `${h.allocation}%` }}
+        style={{ width: `${h.allocation}%`, background: ALLOCATION_COLORS[i % ALLOCATION_COLORS.length] }}
         title={`${h.symbol}: ${h.allocation}%`}
       />
     ))}
@@ -217,7 +219,7 @@ const Portfolio = () => {
             <div className="allocation-legend">
               {holdings.map((h, i) => (
                 <div className="legend-item" key={i}>
-                  <div className="legend-dot" style={{ background: `hsl(${i * 60}, 70%, 55%)` }}></div>
+                  <div className="legend-dot" style={{ background: ALLOCATION_COLORS[i % ALLOCATION_COLORS.length] }}></div>
                   <span className="legend-symbol">{h.symbol}</span>
                   <span className="legend-pct">{h.allocation}%</span>
                 </div>
