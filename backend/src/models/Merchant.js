@@ -7,6 +7,8 @@ const merchantSchema = new mongoose.Schema({
   currency: { type: String, default: 'EUR' },
   country: { type: String, default: 'IE' },
   totalReceived: { type: Number, default: 0 },
+  acceptsCrypto: { type: Boolean, default: false },
+  cryptoAddress: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 

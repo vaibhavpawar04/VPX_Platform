@@ -81,16 +81,21 @@ router.get("/payment-preferences", async (req, res) => {
   }
 });
 
-router.post('/payment-preferences', async (req, res) => {
+router.post("/payment-preferences", async (req, res) => {
   try {
     const userId = req.userId;
-    const { priorityOrder, excludedCoins } = req.body;
+    const { priorityOrder, excludedCoins, mode, fallbackSplitMode } = req.body;
+    const update = { updatedAt: new Date() };
+    if (priorityOrder !== undefined) update.priorityOrder = priorityOrder;
+    if (excludedCoins !== undefined) update.excludedCoins = excludedCoins;
+    if (mode !== undefined) update.mode = mode;
+    if (fallbackSplitMode !== undefined) update.fallbackSplitMode = fallbackSplitMode;
     const prefs = await PaymentPreference.findOneAndUpdate(
       { userId },
-      { priorityOrder, excludedCoins, updatedAt: new Date() },
+      update,
       { upsert: true, new: true }
     );
-    res.json({ success: true, data: prefs, message: 'Payment preferences saved!' });
+    res.json({ success: true, data: prefs, message: "Payment preferences saved!" });
   } catch (err) {
     console.log('Save payment preferences error:', err.message);
     res.status(500).json({ success: false, message: 'Server error' });

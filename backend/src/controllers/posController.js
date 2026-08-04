@@ -1,6 +1,7 @@
 const Balance = require('../models/Balance');
 const Transaction = require('../models/Transaction');
 const PaymentPreference = require('../models/PaymentPreference');
+const Merchant = require('../models/Merchant');
 const { processMerchantPayout } = require('../services/payoutService');
 const https = require('https');
 
@@ -22,6 +23,92 @@ const getUSDRate = (currency) => {
         }
       });
     }).on('error', reject);
+  });
+};
+
+// Executes the actual swap (or MongoDB-only fallback) for one coin.
+// Returns { txHash, onChain }
+const executeSwap = async (userId, coin, cryptoAmount) => {
+  let txHash = null;
+  let onChain = false;
+
+  if (coin === 'ETH') {
+    try {
+      const { swapETHToUSDC } = require('../services/uniswapService');
+      const result = await swapETHToUSDC(userId, parseFloat(cryptoAmount.toFixed(8)));
+      txHash = result.txHash;
+      onChain = true;
+    } catch (err) {
+      console.log(`ETH swap failed, MongoDB only: ${err.message}`);
+    }
+  } else if (coin === 'SOL') {
+    try {
+      const { swapSOLToUSDC } = require('../services/orcaService');
+      const result = await swapSOLToUSDC(userId, parseFloat(cryptoAmount.toFixed(8)));
+      txHash = result.txHash;
+      onChain = true;
+    } catch (err) {
+      console.log(`SOL swap failed, MongoDB only: ${err.message}`);
+    }
+  } else if (coin === 'ARB') {
+    try {
+      const { swapArbitrumETHToUSDC } = require('../services/arbitrumService');
+      const result = await swapArbitrumETHToUSDC(userId, parseFloat(cryptoAmount.toFixed(8)));
+      txHash = result.txHash;
+      onChain = true;
+    } catch (err) {
+      console.log(`ARB swap failed, MongoDB only: ${err.message}`);
+    }
+  } else if (coin === 'BASE') {
+    try {
+      const { swapBaseETHToUSDC } = require('../services/baseService');
+      const result = await swapBaseETHToUSDC(userId, parseFloat(cryptoAmount.toFixed(8)));
+      txHash = result.txHash;
+      onChain = true;
+    } catch (err) {
+      console.log(`BASE swap failed, MongoDB only: ${err.message}`);
+    }
+  }
+  // BTC, BNB, USDT, XRP, ADA, DOGE — no swap infra, MongoDB only
+
+  return { txHash, onChain };
+};
+
+const explorerUrl = (coin, txHash) => {
+  if (!txHash) return null;
+  if (coin === 'ETH' || coin === 'ARB' || coin === 'BASE') {
+    return `https://sepolia.etherscan.io/tx/${txHash}`;
+  }
+  return `https://solscan.io/tx/${txHash}?cluster=devnet`;
+};
+
+// Builds the ordered list of { coin, amount, price, usdValue, useUSD } to spend from,
+// based on split mode. Does NOT mutate balances — pure calculation.
+const buildSpendPlan = (coinValues, totalWalletUSD, usdAmount, splitMode, priorityOrder) => {
+  if (splitMode === 'priority') {
+    const ordered = [...coinValues].sort((a, b) => {
+      const aIndex = (priorityOrder || []).indexOf(a.coin);
+      const bIndex = (priorityOrder || []).indexOf(b.coin);
+      const aRank = aIndex === -1 ? 999 : aIndex;
+      const bRank = bIndex === -1 ? 999 : bIndex;
+      return aRank - bRank;
+    });
+
+    const plan = [];
+    let remainingUSD = usdAmount;
+    for (const coin of ordered) {
+      if (remainingUSD <= 0) break;
+      const useUSD = Math.min(coin.usdValue, remainingUSD);
+      plan.push({ ...coin, useUSD });
+      remainingUSD -= useUSD;
+    }
+    return plan;
+  }
+
+  // weighted — proportional to each coin's share of total wallet value
+  return coinValues.map(coin => {
+    const weight = coin.usdValue / totalWalletUSD;
+    return { ...coin, useUSD: usdAmount * weight };
   });
 };
 
@@ -77,6 +164,9 @@ const stripeWebhook = async (req, res) => {
       const { getMarkets } = require('../services/marketsService');
       const markets = getMarkets();
 
+      // Get merchant (needed to know if direct crypto is possible)
+      const merchant = merchantId ? await Merchant.findOne({ merchantId }) : null;
+
       // Get user balances
       const balances = await Balance.find({ userId, amount: { $gt: 0 } });
 
@@ -95,6 +185,24 @@ const stripeWebhook = async (req, res) => {
       const prefs = await PaymentPreference.findOne({ userId });
       const excludedCoins = prefs?.excludedCoins || [];
       const priorityOrder = prefs?.priorityOrder || null;
+      const mode = prefs?.mode || 'priority';
+      const fallbackSplitMode = prefs?.fallbackSplitMode || 'priority';
+
+      // Determine whether direct crypto is actually usable for this payment
+      const directCryptoAvailable = mode === 'direct_crypto' && !!merchant?.acceptsCrypto && !!merchant?.cryptoAddress;
+      const isDirectCrypto = mode === 'direct_crypto' && directCryptoAvailable;
+
+      // Effective split mode decides HOW coins are chosen/ordered.
+      // direct_crypto without merchant support falls back to fallbackSplitMode.
+      let splitMode;
+      if (mode === 'direct_crypto') {
+        splitMode = directCryptoAvailable ? fallbackSplitMode : fallbackSplitMode;
+      } else {
+        splitMode = mode; // 'priority' or 'weighted'
+      }
+
+      console.log(`Payment mode: ${mode}${mode === 'direct_crypto' ? (directCryptoAvailable ? ' (merchant accepts crypto)' : ' (merchant does not accept crypto — falling back)') : ''}`);
+      console.log(`Split mode: ${splitMode}`);
 
       // Filter out excluded coins
       const availableBalances = balances.filter(b => !excludedCoins.includes(b.coin));
@@ -142,201 +250,68 @@ const stripeWebhook = async (req, res) => {
         return res.json({ received: true });
       }
 
-      // Sort coins by priority order or proportional
-      let orderedCoins;
-      if (priorityOrder && priorityOrder.length > 0) {
-        console.log(`Using priority order: ${priorityOrder.join(' → ')}`);
-        orderedCoins = [...coinValues].sort((a, b) => {
-          const aIndex = priorityOrder.indexOf(a.coin);
-          const bIndex = priorityOrder.indexOf(b.coin);
-          const aRank = aIndex === -1 ? 999 : aIndex;
-          const bRank = bIndex === -1 ? 999 : bIndex;
-          return aRank - bRank;
-        });
-      } else {
-        console.log('No preferences set — using proportional split');
-        orderedCoins = null;
-      }
+      const spendPlan = buildSpendPlan(coinValues, totalWalletUSD, usdAmount, splitMode, priorityOrder);
 
       const breakdown = [];
-      let remainingUSD = usdAmount;
       let totalUSDCSwapped = 0;
+      let totalDirectCryptoUSD = 0;
 
-      if (orderedCoins) {
-        for (const coin of orderedCoins) {
-          if (remainingUSD <= 0) break;
+      for (const coin of spendPlan) {
+        if (coin.useUSD <= 0) continue;
+        const useCrypto = coin.useUSD / coin.price;
 
-          const useUSD = Math.min(coin.usdValue, remainingUSD);
-          const useCrypto = useUSD / coin.price;
+        let txHash = null;
+        let onChain = false;
 
-          let txHash = null;
-          let onChain = false;
-
-          if (coin.coin === 'ETH') {
-            try {
-              console.log(`Swapping ${useCrypto.toFixed(8)} ETH → USDC on Uniswap Sepolia...`);
-              const { swapETHToUSDC } = require('../services/uniswapService');
-              const result = await swapETHToUSDC(userId, parseFloat(useCrypto.toFixed(8)));
-              txHash = result.txHash;
-              onChain = true;
-              totalUSDCSwapped += useUSD;
-              console.log(`✓ ETH swap txHash: ${txHash}`);
-            } catch (err) {
-              console.log(`ETH swap failed, MongoDB only: ${err.message}`);
-              totalUSDCSwapped += useUSD;
-            }
-          } else if (coin.coin === 'SOL') {
-            try {
-              console.log(`Swapping ${useCrypto.toFixed(8)} SOL → devUSDC on Orca Devnet...`);
-              const { swapSOLToUSDC } = require('../services/orcaService');
-              const result = await swapSOLToUSDC(userId, parseFloat(useCrypto.toFixed(8)));
-              txHash = result.txHash;
-              onChain = true;
-              totalUSDCSwapped += useUSD;
-              console.log(`✓ SOL swap txHash: ${txHash}`);
-            } catch (err) {
-              console.log(`SOL swap failed, MongoDB only: ${err.message}`);
-              totalUSDCSwapped += useUSD;
-            }
-          } else if (coin.coin === 'ARB') {
-            try {
-              console.log(`Swapping ${useCrypto.toFixed(8)} ARB ETH → USDC on Arbitrum Sepolia...`);
-              const { swapArbitrumETHToUSDC } = require('../services/arbitrumService');
-              const result = await swapArbitrumETHToUSDC(userId, parseFloat(useCrypto.toFixed(8)));
-              txHash = result.txHash;
-              onChain = true;
-              totalUSDCSwapped += useUSD;
-              console.log(`✓ ARB swap txHash: ${txHash}`);
-            } catch (err) {
-              console.log(`ARB swap failed, MongoDB only: ${err.message}`);
-              totalUSDCSwapped += useUSD;
-            }
-          } else if (coin.coin === 'BASE') {
-            try {
-              console.log(`Swapping ${useCrypto.toFixed(8)} BASE ETH → USDC on Base Sepolia...`);
-              const { swapBaseETHToUSDC } = require('../services/baseService');
-              const result = await swapBaseETHToUSDC(userId, parseFloat(useCrypto.toFixed(8)));
-              txHash = result.txHash;
-              onChain = true;
-              totalUSDCSwapped += useUSD;
-              console.log(`✓ BASE swap txHash: ${txHash}`);
-            } catch (err) {
-              console.log(`BASE swap failed, MongoDB only: ${err.message}`);
-              totalUSDCSwapped += useUSD;
-            }
-          } else {
-            // BTC, BNB, XRP etc — MongoDB only, count as USDC equivalent
-            totalUSDCSwapped += useUSD;
-          }
-
-          breakdown.push({
-            coin: coin.coin,
-            cryptoAmount: useCrypto,
-            usdValue: useUSD,
-            txHash,
-            onChain,
-            explorer: txHash
-              ? coin.coin === 'ETH'
-                ? `https://sepolia.etherscan.io/tx/${txHash}`
-                : `https://solscan.io/tx/${txHash}?cluster=devnet`
-              : null,
-          });
-
-          await Balance.updateOne(
-            { userId, coin: coin.coin },
-            { $inc: { amount: -useCrypto }, $set: { updatedAt: new Date() } }
-          );
-
-          console.log(`Deducted ${useCrypto.toFixed(8)} ${coin.coin} ($${useUSD.toFixed(2)}) from user ${userId}`);
-          remainingUSD -= useUSD;
+        if (isDirectCrypto) {
+          console.log(`Sending ${useCrypto.toFixed(8)} ${coin.coin} directly to merchant ${merchant.cryptoAddress}`);
+          totalDirectCryptoUSD += coin.useUSD;
+        } else {
+          const swapResult = await executeSwap(userId, coin.coin, useCrypto);
+          txHash = swapResult.txHash;
+          onChain = swapResult.onChain;
+          totalUSDCSwapped += coin.useUSD;
         }
 
-      } else {
-        for (const coin of coinValues) {
-          const weight = coin.usdValue / totalWalletUSD;
-          const deductUSD = usdAmount * weight;
-          const deductCrypto = deductUSD / coin.price;
+        breakdown.push({
+          coin: coin.coin,
+          cryptoAmount: useCrypto,
+          usdValue: coin.useUSD,
+          txHash,
+          onChain,
+          directToMerchant: isDirectCrypto,
+          explorer: explorerUrl(coin.coin, txHash),
+        });
 
-          let txHash = null;
-          let onChain = false;
+        await Balance.updateOne(
+          { userId, coin: coin.coin },
+          { $inc: { amount: -useCrypto }, $set: { updatedAt: new Date() } }
+        );
 
-          if (coin.coin === 'ETH') {
-            try {
-              const { swapETHToUSDC } = require('../services/uniswapService');
-              const result = await swapETHToUSDC(userId, parseFloat(deductCrypto.toFixed(8)));
-              txHash = result.txHash;
-              onChain = true;
-              totalUSDCSwapped += deductUSD;
-            } catch (err) {
-              console.log(`ETH swap failed: ${err.message}`);
-              totalUSDCSwapped += deductUSD;
-            }
-          } else if (coin.coin === 'SOL') {
-            try {
-              const { swapSOLToUSDC } = require('../services/orcaService');
-              const result = await swapSOLToUSDC(userId, parseFloat(deductCrypto.toFixed(8)));
-              txHash = result.txHash;
-              onChain = true;
-              totalUSDCSwapped += deductUSD;
-            } catch (err) {
-              console.log(`SOL swap failed: ${err.message}`);
-              totalUSDCSwapped += deductUSD;
-            }
-          } else if (coin.coin === 'ARB') {
-            try {
-              console.log(`Swapping ${useCrypto.toFixed(8)} ARB ETH → USDC on Arbitrum Sepolia...`);
-              const { swapArbitrumETHToUSDC } = require('../services/arbitrumService');
-              const result = await swapArbitrumETHToUSDC(userId, parseFloat(useCrypto.toFixed(8)));
-              txHash = result.txHash;
-              onChain = true;
-              totalUSDCSwapped += useUSD;
-              console.log(`✓ ARB swap txHash: ${txHash}`);
-            } catch (err) {
-              console.log(`ARB swap failed, MongoDB only: ${err.message}`);
-              totalUSDCSwapped += useUSD;
-            }
-          } else if (coin.coin === 'BASE') {
-            try {
-              const { swapBaseETHToUSDC } = require('../services/baseService');
-              const result = await swapBaseETHToUSDC(userId, parseFloat(deductCrypto.toFixed(8)));
-              txHash = result.txHash;
-              onChain = true;
-              totalUSDCSwapped += deductUSD;
-            } catch (err) {
-              console.log(`BASE swap failed: ${err.message}`);
-              totalUSDCSwapped += deductUSD;
-            }
-          } else {
-            totalUSDCSwapped += deductUSD;
-          }
-
-          breakdown.push({
-            coin: coin.coin,
-            cryptoAmount: deductCrypto,
-            usdValue: deductUSD,
-            txHash,
-            onChain,
-            explorer: txHash
-              ? coin.coin === 'ETH'
-                ? `https://sepolia.etherscan.io/tx/${txHash}`
-                : `https://solscan.io/tx/${txHash}?cluster=devnet`
-              : null,
-          });
-
-          await Balance.updateOne(
-            { userId, coin: coin.coin },
-            { $inc: { amount: -deductCrypto }, $set: { updatedAt: new Date() } }
-          );
-
-          console.log(`Deducted ${deductCrypto.toFixed(8)} ${coin.coin} ($${deductUSD.toFixed(2)}) from user ${userId}`);
-        }
+        console.log(`Deducted ${useCrypto.toFixed(8)} ${coin.coin} ($${coin.useUSD.toFixed(2)}) from user ${userId}`);
       }
 
       const processingTimeMs = Date.now() - startTime;
 
-      // ── MERCHANT PAYOUT FROM TREASURY ──
+      // ── MERCHANT PAYOUT ──
       let merchantPayout = null;
-      if (merchantId) {
+      if (merchantId && isDirectCrypto) {
+        try {
+          await Merchant.updateOne({ merchantId }, { $inc: { totalReceived: totalDirectCryptoUSD } });
+          merchantPayout = {
+            businessName: merchant.businessName,
+            iban: merchant.iban,
+            fiatAmount: totalDirectCryptoUSD,
+            currency: 'USD (crypto)',
+            payoutMethod: 'direct_crypto',
+            exchangeRate: 1,
+            cryptoAddress: merchant.cryptoAddress,
+          };
+          console.log(`✓ Direct crypto payout recorded for merchant ${merchantId}`);
+        } catch (err) {
+          console.log(`Direct crypto merchant credit failed: ${err.message}`);
+        }
+      } else if (merchantId) {
         try {
           console.log(`\n── Initiating merchant payout ──`);
           console.log(`USDC in treasury: $${totalUSDCSwapped.toFixed(2)}`);
@@ -355,16 +330,18 @@ const stripeWebhook = async (req, res) => {
         userId, type: 'pos_payment', fiatAmount, fiatCurrency,
         usdAmount, stripePaymentId: paymentIntent.id,
         breakdown, processingTimeMs, status: 'confirmed',
-        note: priorityOrder
-          ? `POS payment via Stripe — priority order`
-          : `POS payment via Stripe — proportional split`,
+        note: isDirectCrypto
+          ? `POS payment via Stripe — direct crypto to merchant`
+          : splitMode === 'priority'
+            ? `POS payment via Stripe — priority order`
+            : `POS payment via Stripe — proportional split`,
         merchantPayout: merchantPayout || null,
       });
 
       console.log(`\n✓ POS Payment confirmed in ${processingTimeMs}ms`);
       console.log('Breakdown:');
       breakdown.forEach(b => {
-        console.log(`  ${b.coin}: ${b.cryptoAmount.toFixed(8)} ($${b.usdValue.toFixed(2)}) ${b.onChain ? '✓ on-chain' : '⚠ MongoDB only'}`);
+        console.log(`  ${b.coin}: ${b.cryptoAmount.toFixed(8)} ($${b.usdValue.toFixed(2)}) ${b.directToMerchant ? '→ direct to merchant' : b.onChain ? '✓ on-chain swap' : '⚠ MongoDB only'}`);
         if (b.explorer) console.log(`  Explorer: ${b.explorer}`);
       });
 
@@ -374,7 +351,6 @@ const stripeWebhook = async (req, res) => {
         console.log(`  IBAN: ${merchantPayout.iban}`);
         console.log(`  Amount: ${merchantPayout.fiatAmount} ${merchantPayout.currency}`);
         console.log(`  Method: ${merchantPayout.payoutMethod}`);
-        console.log(`  Rate: 1 USDC = ${merchantPayout.exchangeRate} ${merchantPayout.currency}`);
       }
 
     } catch (err) {
