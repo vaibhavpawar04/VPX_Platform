@@ -1,5 +1,5 @@
 const https = require('https');
-const REFRESH_INTERVAL = 30 * 1000; // 30 seconds
+const REFRESH_INTERVAL = 3 * 60 * 1000; // 3 minutes (reduced to avoid Binance rate-limit bans)
 let marketsData = [];
 const STABLE_COINS = ['USDT', 'USDC', 'DAI', 'BUSD', 'TUSD', 'USDP', 'USDD', 'GUSD'];
 const MEME_COINS   = ['DOGE', 'SHIB', 'PEPE', 'FLOKI', 'BONK', 'WIF', 'MEME', 'BABYDOGE'];
