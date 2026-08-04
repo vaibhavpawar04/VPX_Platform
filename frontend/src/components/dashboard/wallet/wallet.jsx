@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./wallet.css";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import {
   getBalancesAPI,
   getTransactionsAPI,
@@ -30,6 +31,7 @@ const Wallet = () => {
   const [loadingData, setLoadingData] = useState(false);
 
   const [showDeposit, setShowDeposit] = useState(false);
+  const [showBalance, setShowBalance] = useState(false);
   const [depositCoin, setDepositCoin] = useState('ETH');
   const [depositAmount, setDepositAmount] = useState('');
   const [depositLoading, setDepositLoading] = useState(false);
@@ -366,8 +368,15 @@ const Wallet = () => {
       <div className="balance-grid">
         <div className="balance-main-card">
           <div className="balance-label">Total Portfolio Value</div>
-          <div className="balance-amount">
-            {loadingData ? 'Loading...' : `$${getTotalValue()}`}
+          <div className="balance-amount" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span>{loadingData ? "Loading..." : (showBalance ? `$${getTotalValue()}` : "\u2022\u2022\u2022\u2022\u2022\u2022")}</span>
+            <button
+              onClick={() => setShowBalance(prev => !prev)}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#6B7280", display: "flex", alignItems: "center", padding: "4px" }}
+              aria-label={showBalance ? "Hide balance" : "Show balance"}
+            >
+              {showBalance ? <FiEye size={20} /> : <FiEyeOff size={20} />}
+            </button>
           </div>
           <span className="balance-change positive">▲ Live prices from Binance</span>
         </div>
