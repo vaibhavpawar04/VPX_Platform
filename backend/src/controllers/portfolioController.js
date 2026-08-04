@@ -220,6 +220,7 @@ const getTrades = async (req, res) => {
 
 // GET /api/portfolio/watchlist
 const getWatchlist = async (req, res) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   try {
     const userId = req.userId;
     const { getMarkets } = require("../services/marketsService");
