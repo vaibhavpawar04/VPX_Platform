@@ -9,7 +9,7 @@ const paymentPreferenceSchema = new mongoose.Schema({
   },
   priorityOrder: {
     type:    [String],
-    default: ['BTC', 'ETH', 'SOL', 'BNB', 'USDT', 'XRP', 'ADA', 'DOGE'],
+    default: ['BTC', 'ETH', 'SOL', 'BASE', 'ARB', 'BNB', 'USDT', 'XRP', 'ADA', 'DOGE'],
   },
   excludedCoins: {
     type:    [String],

@@ -61,17 +61,23 @@ router.get('/deposit-address/:coin', async (req, res) => {
   }
 });
 
-router.get('/payment-preferences', async (req, res) => {
+router.get("/payment-preferences", async (req, res) => {
   try {
     const userId = req.userId;
+    const ALL_SUPPORTED_COINS = ["BTC", "ETH", "SOL", "BASE", "ARB", "BNB", "USDT", "XRP", "ADA", "DOGE"];
     let prefs = await PaymentPreference.findOne({ userId });
     if (!prefs) {
       prefs = await PaymentPreference.create({ userId });
     }
+    const missingCoins = ALL_SUPPORTED_COINS.filter(c => !prefs.priorityOrder.includes(c));
+    if (missingCoins.length > 0) {
+      prefs.priorityOrder = [...prefs.priorityOrder, ...missingCoins];
+      await prefs.save();
+    }
     res.json({ success: true, data: prefs });
   } catch (err) {
-    console.log('Get payment preferences error:', err.message);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.log("Get payment preferences error:", err.message);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
