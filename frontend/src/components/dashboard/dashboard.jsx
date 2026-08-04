@@ -197,6 +197,11 @@ const Dashboard = () => {
     fetchMerchants();
   }, [token]);
 
+  useEffect(() => {
+    const match = merchants.find(m => m.currency === testCurrency);
+    if (match) setTestMerchantId(match.merchantId);
+  }, [testCurrency, merchants]);
+
   const handleTestPayment = async () => {
     setTestLoading(true);
     setTestStatus("");
@@ -336,15 +341,6 @@ const Dashboard = () => {
               style={{ padding: "8px", background: "#0A0C10", border: "1px solid #333", borderRadius: "6px", color: "white", fontSize: "0.85rem" }}
             >
               {["USD", "EUR", "GBP", "INR"].map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <select
-              value={testMerchantId}
-              onChange={e => setTestMerchantId(e.target.value)}
-              style={{ padding: "8px", background: "#0A0C10", border: "1px solid #333", borderRadius: "6px", color: "white", fontSize: "0.85rem" }}
-            >
-              {merchants.map(m => (
-                <option key={m.merchantId} value={m.merchantId}>{m.businessName} ({m.currency})</option>
-              ))}
             </select>
             <button
               onClick={handleTestPayment}
