@@ -36,6 +36,7 @@ const fetchMarkets = () => {
           .filter(item => item.current_price > 0)
           .map(item => ({
             symbol:    item.symbol.toUpperCase(),
+            id:        item.id,
             name:      item.name,
             price:     item.current_price,
             change24h: item.price_change_percentage_24h || 0,
@@ -76,3 +77,56 @@ const startMarketsService = () => {
 
 const getMarkets = () => marketsData;
 module.exports = { startMarketsService, getMarkets };
+
+// --- OHLC (candlestick) data ---
+const ohlcCache = {};
+const OHLC_CACHE_TTL = 60 * 1000; // 1 minute
+
+const getOHLC = (coinId, days = '1') => {
+  return new Promise((resolve, reject) => {
+    const cacheKey = `${coinId}_${days}`;
+    const cached = ohlcCache[cacheKey];
+    if (cached && (Date.now() - cached.timestamp) < OHLC_CACHE_TTL) {
+      return resolve(cached.data);
+    }
+
+    const options = {
+      hostname: 'api.coingecko.com',
+      path: `/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=${days}`,
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'VPX-Platform/1.0 (https://vpx-platform.vercel.app)',
+        'x-cg-demo-api-key': process.env.COINGECKO_API_KEY,
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          if (!Array.isArray(parsed)) {
+            return reject(new Error('Unexpected OHLC response shape'));
+          }
+          const candles = parsed.map(c => ({
+            time: c[0],
+            open: c[1],
+            high: c[2],
+            low: c[3],
+            close: c[4],
+          }));
+          ohlcCache[cacheKey] = { data: candles, timestamp: Date.now() };
+          resolve(candles);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+};
+
+module.exports.getOHLC = getOHLC;

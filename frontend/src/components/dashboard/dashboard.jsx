@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Sidebar from './sidebar/sidebar';
 import Markets from './markets/markets';
@@ -25,6 +25,7 @@ const Dashboard = () => {
   const [merchants, setMerchants] = useState([]);
   const [testStatus, setTestStatus] = useState('');
   const [testLoading, setTestLoading] = useState(false);
+  const testInFlightRef = useRef(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [walletAddress, setWalletAddress] = useState(() => localStorage.getItem('walletAddress') || '');
@@ -203,6 +204,8 @@ const Dashboard = () => {
   }, [testCurrency, merchants]);
 
   const handleTestPayment = async () => {
+    if (testInFlightRef.current) return;
+    testInFlightRef.current = true;
     setTestLoading(true);
     setTestStatus("");
     try {
@@ -221,6 +224,7 @@ const Dashboard = () => {
       setTestStatus("ERROR: Cannot connect to server");
     }
     setTestLoading(false);
+    testInFlightRef.current = false;
   };
 
   const formatPrice = (symbol, price) => {

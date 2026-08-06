@@ -1,19 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createChart, CandlestickSeries } from 'lightweight-charts';
 import './trade.css';
 
+const TIMEFRAME_TO_DAYS = { '1H': '1', '4H': '1', '1D': '1', '1W': '7', '1M': '30' };
 const Trade = () => {
   const [activeTab, setActiveTab] = useState('buy');
   const [selectedPair, setSelectedPair] = useState('BTC/USDT');
   const [amount, setAmount] = useState('');
   const [price, setPrice] = useState('');
+  const [timeframe, setTimeframe] = useState('1D');
+  const [chartLoading, setChartLoading] = useState(true);
 
-  // Sample trading pairs
+  const chartContainerRef = useRef(null);
+  const chartRef = useRef(null);
+  const seriesRef = useRef(null);
+
+  // Trading pairs mapped to their CoinGecko coin IDs (needed for OHLC data)
   const tradingPairs = [
-    { pair: 'BTC/USDT', price: 63245, change: 2.4, volume: '28.5B', icon: '₿' },
-    { pair: 'ETH/USDT', price: 3421, change: -1.2, volume: '15.2B', icon: 'Ξ' },
-    { pair: 'SOL/USDT', price: 142, change: 5.7, volume: '3.2B', icon: '◎' },
-    { pair: 'BNB/USDT', price: 578, change: 0.8, volume: '1.8B', icon: '⬤' },
+    { pair: 'BTC/USDT', price: 63245, change: 2.4, volume: '28.5B', icon: '₿', coinId: 'bitcoin' },
+    { pair: 'ETH/USDT', price: 3421, change: -1.2, volume: '15.2B', icon: 'Ξ', coinId: 'ethereum' },
+    { pair: 'SOL/USDT', price: 142, change: 5.7, volume: '3.2B', icon: '◎', coinId: 'solana' },
+    { pair: 'BNB/USDT', price: 578, change: 0.8, volume: '1.8B', icon: '⬤', coinId: 'binancecoin' },
   ];
+
 
   // Sample order book data
   const orderBook = {
@@ -42,6 +51,77 @@ const Trade = () => {
     { price: 63235, amount: 0.22, time: '51s ago', type: 'sell' },
     { price: 63232, amount: 0.18, time: '1m ago', type: 'sell' },
   ];
+
+  const currentCoinId = tradingPairs.find(p => p.pair === selectedPair)?.coinId || 'bitcoin';
+
+  // Initialize chart once
+  useEffect(() => {
+    if (!chartContainerRef.current) return;
+
+    const chart = createChart(chartContainerRef.current, {
+      layout: { background: { color: 'transparent' }, textColor: '#9CA3AF' },
+      grid: {
+        vertLines: { color: 'rgba(255,255,255,0.05)' },
+        horzLines: { color: 'rgba(255,255,255,0.05)' },
+      },
+      width: chartContainerRef.current.clientWidth,
+      height: 400,
+      timeScale: { timeVisible: true, secondsVisible: false },
+    });
+
+    const series = chart.addSeries(CandlestickSeries, {
+      upColor: '#10B981',
+      downColor: '#EF4444',
+      borderVisible: false,
+      wickUpColor: '#10B981',
+      wickDownColor: '#EF4444',
+    });
+
+    chartRef.current = chart;
+    seriesRef.current = series;
+
+    const handleResize = () => {
+      if (chartContainerRef.current) {
+        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      chart.remove();
+    };
+  }, []);
+
+  // Fetch real OHLC data whenever the selected pair or timeframe changes, and refresh periodically
+  useEffect(() => {
+    const fetchOHLC = async () => {
+      setChartLoading(true);
+      try {
+        const days = TIMEFRAME_TO_DAYS[timeframe] || '1';
+        const res = await fetch(`https://vpx-backend.onrender.com/api/markets/ohlc/${currentCoinId}?days=${days}`);
+        const data = await res.json();
+        if (data.success && seriesRef.current) {
+          const formatted = data.data.map(c => ({
+            time: Math.floor(c.time / 1000),
+            open: c.open,
+            high: c.high,
+            low: c.low,
+            close: c.close,
+          }));
+          seriesRef.current.setData(formatted);
+          if (chartRef.current) chartRef.current.timeScale().fitContent();
+        }
+      } catch (err) {
+        console.log('OHLC fetch error:', err);
+      }
+      setChartLoading(false);
+    };
+
+    fetchOHLC();
+    const interval = setInterval(fetchOHLC, 90 * 1000); // refresh every 90 seconds
+    return () => clearInterval(interval);
+  }, [currentCoinId, timeframe]);
 
   return (
     <div className="trade-container">
@@ -102,75 +182,23 @@ const Trade = () => {
           <div className="chart-header">
             <div className="timeframes">
               {['1H', '4H', '1D', '1W', '1M'].map(tf => (
-                <button key={tf} className="timeframe-btn">{tf}</button>
+                <button
+                  key={tf}
+                  className={`timeframe-btn ${timeframe === tf ? 'active' : ''}`}
+                  onClick={() => setTimeframe(tf)}
+                >
+                  {tf}
+                </button>
               ))}
             </div>
-            <div className="chart-indicators">
-              <span className="indicator">MA(7) 63,120</span>
-              <span className="indicator">MA(25) 62,890</span>
-            </div>
           </div>
-          <div className="chart-placeholder">
-            <div className="candlestick-chart">
-              {/* Realistic candlestick patterns */}
-              {[...Array(40)].map((_, i) => {
-                // Generate realistic candle data
-                const open = Math.random() * 40 + 30; // Open price position (30-70%)
-                const close = Math.random() * 40 + 30; // Close price position (30-70%)
-                const high = Math.max(open, close) + Math.random() * 15; // High above body
-                const low = Math.min(open, close) - Math.random() * 15; // Low below body
-                const isBullish = close > open;
-                
-                // Calculate positions
-                const bodyTop = 100 - Math.max(open, close);
-                const bodyBottom = 100 - Math.min(open, close);
-                const bodyHeight = Math.abs(close - open);
-                
-                const wickTop = 100 - high;
-                const wickTopHeight = Math.abs(high - Math.max(open, close));
-                
-                
-                const wickBottomHeight = Math.abs(low - Math.min(open, close));
-                
-                return (
-                  <div key={i} className="candle-wrapper">
-                    {/* Upper wick */}
-                    <div 
-                      className="wick upper"
-                      style={{
-                        top: `${wickTop}%`,
-                        height: `${wickTopHeight}%`,
-                        animationDelay: `${i * 0.02}s`
-                      }}
-                    ></div>
-                    
-                    {/* Candle body */}
-                    <div 
-                      className={`candle-body ${isBullish ? 'bullish' : 'bearish'}`}
-                      style={{
-                        top: `${bodyTop}%`,
-                        height: `${bodyHeight}%`,
-                        animationDelay: `${i * 0.02}s`
-                      }}
-                    ></div>
-                    
-                    {/* Lower wick */}
-                    <div 
-                      className="wick lower"
-                      style={{
-                        top: `${bodyBottom}%`,
-                        height: `${wickBottomHeight}%`,
-                        animationDelay: `${i * 0.02}s`
-                      }}
-                    ></div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="chart-overlay">
-              <span className="current-price">$63,245</span>
-              <span className="price-change positive">+2.4%</span>
-            </div>
+          <div className="chart-placeholder" style={{ position: 'relative' }}>
+            {chartLoading && (
+              <div style={{ position: 'absolute', top: '10px', left: '10px', color: '#6B7280', fontSize: '0.8rem', zIndex: 2 }}>
+                Loading chart data...
+              </div>
+            )}
+            <div ref={chartContainerRef} style={{ width: '100%', height: '400px' }} />
           </div>
         </div>
 

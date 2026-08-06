@@ -1,11 +1,25 @@
 const express = require('express');
 const router = express.Router();
-const { getMarkets } = require('../services/marketsService');
+const { getMarkets, getOHLC } = require('../services/marketsService');
 
 // GET /api/markets - returns all markets data
 router.get('/', (req, res) => {
   const markets = getMarkets();
   res.json({ success: true, data: markets });
+});
+
+// GET /api/markets/ohlc/:coinId - returns candlestick (OHLC) data for a coin
+// days query param controls the timeframe (1, 7, 14, 30, 90, 180, 365)
+router.get('/ohlc/:coinId', async (req, res) => {
+  try {
+    const { coinId } = req.params;
+    const days = req.query.days || '1';
+    const candles = await getOHLC(coinId, days);
+    res.json({ success: true, data: candles });
+  } catch (err) {
+    console.log('Get OHLC error:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to fetch candlestick data' });
+  }
 });
 
 // GET /api/markets/:category - returns markets by category
