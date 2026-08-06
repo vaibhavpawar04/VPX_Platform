@@ -17,13 +17,11 @@ const Trade = () => {
 
   // Trading pairs mapped to their CoinGecko coin IDs (needed for OHLC data)
   const tradingPairs = [
-    { pair: 'BTC/USDT', price: 63245, change: 2.4, volume: '28.5B', icon: '₿', coinId: 'bitcoin' },
-    { pair: 'ETH/USDT', price: 3421, change: -1.2, volume: '15.2B', icon: 'Ξ', coinId: 'ethereum' },
-    { pair: 'SOL/USDT', price: 142, change: 5.7, volume: '3.2B', icon: '◎', coinId: 'solana' },
-    { pair: 'BNB/USDT', price: 578, change: 0.8, volume: '1.8B', icon: '⬤', coinId: 'binancecoin' },
+    { pair: 'BTC/USDT', price: 63245, change: 2.4, volume: '28.5B', icon: 'BTC', coinId: 'bitcoin' },
+    { pair: 'ETH/USDT', price: 3421, change: -1.2, volume: '15.2B', icon: 'ETH', coinId: 'ethereum' },
+    { pair: 'SOL/USDT', price: 142, change: 5.7, volume: '3.2B', icon: 'SOL', coinId: 'solana' },
+    { pair: 'ARB/USDT', price: 1.05, change: 3.1, volume: '0.8B', icon: 'ARB', coinId: 'arbitrum' },
   ];
-
-
   // Sample order book data
   const orderBook = {
     asks: [

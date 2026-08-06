@@ -44,7 +44,7 @@
 }
 
 .pair-icon {
-  font-size: 1.5rem;
+  font-size: 0.65rem;
   width: 32px;
   height: 32px;
   display: flex;
@@ -52,6 +52,8 @@
   justify-content: center;
   background: linear-gradient(135deg, #00F0FF, #FF9800);
   border-radius: 8px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
   color: #000;
   font-weight: bold;
 }
@@ -153,7 +155,7 @@
 /* Trading Area */
 .trading-area {
   display: grid;
-  grid-template-columns: 1fr 350px;
+  grid-template-columns: 1fr;
   gap: 20px;
   margin-bottom: 20px;
 }
