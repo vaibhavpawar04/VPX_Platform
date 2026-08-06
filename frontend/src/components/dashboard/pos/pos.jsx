@@ -123,6 +123,7 @@ const POS = () => {
   const currencySymbol = CURRENCY_SYMBOLS[selectedFiat]?.symbol || '$';
 
   const fetchTransactions = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await fetch('https://vpx-backend.onrender.com/api/pos/transactions', {
         headers: { Authorization: `Bearer ${token}` }
@@ -132,6 +133,7 @@ const POS = () => {
     } catch (err) {
       console.log('Fetch POS transactions error:', err);
     }
+    setLoading(false);
   }, [token]);
 
   const fetchSummary = useCallback(async () => {
@@ -190,44 +192,46 @@ const POS = () => {
           <meta charset="UTF-8" />
           <title>VPX Receipt - ${tx._id}</title>
           <style>
-            body { font-family: 'Arial', sans-serif; background: #0A0A0A; color: white; padding: 40px; }
-            .receipt { max-width: 500px; margin: 0 auto; background: #1E1E1E; border-radius: 16px; padding: 30px; border: 1px solid #333; }
-            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #FF9800; padding-bottom: 20px; }
-            .header h1 { color: #00F0FF; margin: 0 0 5px 0; font-size: 1.8rem; }
-            .header p { color: #888; margin: 0; font-size: 0.9rem; }
-            .amount { text-align: center; margin: 20px 0; }
-            .amount h2 { font-size: 3rem; color: white; margin: 0; }
-            .amount p { color: #26a69a; font-size: 1rem; margin: 5px 0 0 0; }
-            .details { background: #2D2D2D; border-radius: 10px; padding: 20px; margin: 20px 0; }
-            .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; font-size: 0.9rem; }
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: #F5F5F5; color: #1A1A1A; padding: 48px 20px; }
+            .receipt { max-width: 480px; margin: 0 auto; background: #FFFFFF; border: 1px solid #E0E0E0; border-radius: 4px; padding: 40px; }
+            .header { text-align: center; margin-bottom: 28px; padding-bottom: 24px; border-bottom: 3px solid #1A1A2E; }
+            .header .logo { font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; color: #1A1A2E; margin-bottom: 4px; }
+            .header .subtitle { color: #666; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1.5px; }
+            .amount { text-align: center; margin: 28px 0; }
+            .amount .main { font-size: 2.5rem; font-weight: 700; color: #1A1A2E; }
+            .amount .usd { color: #16A085; font-size: 0.95rem; margin-top: 4px; font-weight: 600; }
+            .details { margin: 24px 0; }
+            .row { display: flex; justify-content: space-between; align-items: flex-start; padding: 11px 0; border-bottom: 1px solid #EEEEEE; font-size: 0.85rem; gap: 16px; }
             .row:last-child { border-bottom: none; }
-            .label { color: #888; }
-            .value { color: white; font-weight: 600; }
-            .status { color: #26a69a; }
-            .footer { text-align: center; margin-top: 20px; color: #888; font-size: 0.85rem; }
-            .footer span { color: #FF9800; }
+            .label { color: #888; white-space: nowrap; }
+            .value { color: #1A1A1A; font-weight: 600; text-align: right; word-break: break-all; }
+            .status { color: #16A085; }
+            .footer { text-align: center; margin-top: 28px; padding-top: 20px; border-top: 1px solid #EEEEEE; color: #999; font-size: 0.8rem; }
+            .footer .brand { color: #1A1A2E; font-weight: 700; }
+            a { color: #16A085; text-decoration: none; }
           </style>
         </head>
         <body>
           <div class="receipt">
             <div class="header">
-              <h1>VPX Platform</h1>
-              <p>Payment Receipt</p>
+              <div class="logo">VPX</div>
+              <div class="subtitle">Payment Receipt</div>
             </div>
             <div class="amount">
-              <h2>${formatTransactionAmount(tx)}</h2>
-              <p>≈ $${tx.usdAmount?.toFixed(2)} USD</p>
+              <div class="main">${formatTransactionAmount(tx)}</div>
+              <div class="usd">\u2248 $${tx.usdAmount?.toFixed(2)} USD</div>
             </div>
             <div class="details">
               <div class="row"><span class="label">Transaction ID</span><span class="value">${tx._id?.slice(-8).toUpperCase()}</span></div>
-              <div class="row"><span class="label">Stripe Payment ID</span><span class="value" style="font-size:0.75rem">${tx.stripePaymentId || '—'}</span></div>
-              <div class="row"><span class="label">Status</span><span class="value status">✓ ${tx.status?.toUpperCase()}</span></div>
+              <div class="row"><span class="label">Stripe Payment ID</span><span class="value" style="font-size:0.75rem">${tx.stripePaymentId || "\u2014"}</span></div>
+              <div class="row"><span class="label">Status</span><span class="value status">\u2713 ${tx.status?.toUpperCase()}</span></div>
               <div class="row"><span class="label">Processing Time</span><span class="value">${tx.processingTimeMs}ms</span></div>
-              <div class="row"><span class="label">Time</span><span class="value">${formatDate(tx.createdAt)}</span></div>
+              <div class="row"><span class="label">Date</span><span class="value">${new Date(tx.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span></div>
               ${breakdownRows}
             </div>
             <div class="footer">
-              <p>Thank you for using <span>VPX</span></p>
+              <p>Thank you for using <span class="brand">VPX</span></p>
             </div>
           </div>
         </body>

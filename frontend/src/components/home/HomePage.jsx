@@ -369,10 +369,14 @@ const HomePage = () => {
         </div>
         <div style={{ display: 'flex', gap: '24px' }}>
           {['Privacy', 'Terms', 'GitHub'].map(link => (
-            <a key={link} href="#" style={{ color: '#4B5563', textDecoration: 'none', fontSize: '0.8rem', transition: 'color 0.2s' }}
-              onMouseEnter={e => e.target.style.color = '#9CA3AF'}
-              onMouseLeave={e => e.target.style.color = '#4B5563'}
-            >{link}</a>
+            link === 'GitHub' ? (
+              <a key={link} href="https://github.com/vaibhavpawar04/VPX_Platform" target="_blank" rel="noopener noreferrer" style={{ color: '#4B5563', textDecoration: 'none', fontSize: '0.8rem', transition: 'color 0.2s' }}
+                onMouseEnter={e => e.target.style.color = '#9CA3AF'}
+                onMouseLeave={e => e.target.style.color = '#4B5563'}
+              >{link}</a>
+            ) : (
+              <span key={link} style={{ color: '#4B5563', fontSize: '0.8rem', cursor: 'default' }}>{link}</span>
+            )
           ))}
         </div>
       </footer>
