@@ -662,12 +662,14 @@ const Wallet = () => {
                 <div className="history-item" key={i}>
                   <div className="history-left">
                     <div className={`history-icon ${tx.type}`}>
-                      {tx.type === 'deposit' ? '⬇' : tx.type === 'withdraw' ? '⬆' : '⇄'}
+                      {tx.type === 'deposit' ? '⬇' : tx.type === 'withdraw' ? '⬆' : tx.type === 'pos_payment' ? '💳' : '⇄'}
                     </div>
                     <div>
                       <div className="history-type">
                         {tx.type === 'swap'
                           ? `Swap ${tx.fromCoin} → ${tx.toCoin}`
+                          : tx.type === 'pos_payment'
+                          ? 'POS Payment'
                           : `${tx.type.charAt(0).toUpperCase() + tx.type.slice(1)} ${tx.coin}`}
                       </div>
                       <div className="history-date">{formatDate(tx.createdAt)}</div>
@@ -677,6 +679,8 @@ const Wallet = () => {
                     <div className={`history-amount ${tx.type === 'deposit' ? 'positive' : tx.type === 'withdraw' ? 'negative' : 'neutral'}`}>
                       {tx.type === 'swap'
                         ? `${tx.fromAmount} ${tx.fromCoin}`
+                        : tx.type === 'pos_payment'
+                        ? `-${tx.fiatAmount} ${tx.fiatCurrency}`
                         : `${tx.type === 'withdraw' ? '-' : '+'}${tx.amount} ${tx.coin}`}
                     </div>
                     <div className="history-usd">{tx.status}</div>
