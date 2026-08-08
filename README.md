@@ -1,4 +1,4 @@
-# VPX Crypto Trading POS Platform
+# VPX: Decentralized Settlement Layer for Real-Time Multi-Currency Crypto-to-Fiat POS Payments
 
 A full-stack cryptocurrency trading and point-of-sale platform built with React, Node.js, MongoDB, and real blockchain integrations.
 
